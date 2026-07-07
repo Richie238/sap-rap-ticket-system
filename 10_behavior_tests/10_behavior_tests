@@ -1,0 +1,6 @@
+# Behavior Tests
+
+Automatisierte ABAP-Unit-Tests für die Behavior-Implementierung wurden in diesem Projekt noch nicht umgesetzt. 
+Die fachliche Logik (Determinations, Validations, Early Numbering) wurde über die Fiori-Elements-App-Preview manuell verifiziert.
+
+Als nächster Ausbauschritt wäre die Implementierung von Testklassen mit `CLASS ... FOR TESTING` sinnvoll, um Determinations und Validations unabhängig von der UI automatisiert abzusichern.
