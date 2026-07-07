@@ -1,0 +1,25 @@
+**Lösung:** Assoziationen in der Root View deklarieren, die Feldauflösung (Text-Anzeige) jedoch ausschliesslich in der Projection View vornehmen, 
+wo `provider contract transactional_query` das erlaubt.
+
+## Composition vs. Association bei Child-Entities
+
+Eine über `composition [0..*] of ...` eingebundene Child-Entity darf nicht als eigenständige Root-Entity deklariert sein (`define root view entity`). 
+Sie muss als reguläre View-Entity (`define view entity`, ohne `root`) angelegt werden. Die zugehörige Behavior Definition benötigt `lock dependent by` 
+und `authorization dependent by`, referenziert auf die Parent-Assoziation, sowie eine explizite `association _Parent { create; }`-Freigabe auf Seiten des Parents, 
+damit `create` über die Composition erlaubt ist.
+
+## SELECT SINGLE MAX(...) bei leerer Tabelle
+
+`SELECT SINGLE ... MAX(...)` liefert bei einer leeren Ergebnismenge unter Umständen einen nicht behandelbaren NULL-Wert. Robuster:
+
+```abap
+SELECT FROM <table>
+  FIELDS <key_field>
+  ORDER BY <key_field> DESCENDING
+  INTO TABLE @DATA(lt_max)
+  UP TO 1 ROWS.
+
+IF lt_max IS NOT INITIAL.
+  max_value = lt_max[ 1 ]-<key_field>.
+ENDIF.
+```
