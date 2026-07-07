@@ -14,16 +14,7 @@ define root view entity ZR_TICKET_ITEM_03
   subject as Subject,
   requester_id as RequesterID,
   assigned_to as AssignedTo,
-  priority as Priority,
-  
-  case priority
-  when '1' then 3  // Grün / Positive
-  when '2' then 2  // Gelb / Critical
-  when '3' then 2  // Gelb / Critical
-  when '4' then 1  // Rot / Negative
-  else 0
-end as PriorityCriticality,
-  
+  priority as Priority,  
   status as Status,
   category as Category,
   description as Description,
