@@ -4,7 +4,7 @@ Ein eigenständig entwickeltes Ticket-Management-System auf Basis des SAP RESTfu
 
 ## Über dieses Projekt
 
-Dieses Projekt entstand im Rahmen meiner vertieften Auseinandersetzung mit modernen SAP-Entwicklungskonzepten. Ausgehend vom offiziellen SAP RAP100-Tutorial habe ich das erlernte Prinzip auf ein komplett eigenes, praxisnahes Fachobjekt übertragen – ein Ticket-Management-System, wie es in IT-Support- oder Change-Request-Prozessen eingesetzt wird.
+Ein Ticket-Management-System auf Basis von SAP RAP – konzipiert und umgesetzt für ein praxisnahes Support- und Change-Request-Szenario, wie es in IT-Betriebsumgebungen typisch ist.
 
 ## Umgesetzte RAP-Kernkonzepte
 
