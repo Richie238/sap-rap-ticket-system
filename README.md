@@ -74,7 +74,22 @@ notes/                      Technische Notizen zu Implementierungsdetails
 - **Validation – Fälligkeitsdatum:** Das Fälligkeitsdatum muss in der Zukunft liegen.
 - **Early Numbering:** Die TicketID wird serverseitig unter Berücksichtigung sowohl der aktiven als auch der Draft-Tabelle eindeutig vergeben.
 
-## Autor
+## Screenshots
+
+### Ticketübersicht
+![Ticketliste](screenshots/01_ticket_list.png)
+
+### Neues Ticket anlegen (automatische ID-Vergabe)
+![Neues Ticket](screenshots/02_new_ticket.png)
+
+### Ticket-Detailansicht
+![Ticket Detail](screenshots/03_ticket_detail.png)
+
+### Wertehilfe mit Klartext-Anzeige
+![Value Help](screenshots/04_value_help.png)
+
+### Validierung bei fehlenden Pflichtfeldern
+![Validation](screenshots/05_validation_error.png)
 
 ## Autor
 
