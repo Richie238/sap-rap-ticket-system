@@ -1,0 +1,36 @@
+# Technische Notizen
+
+Dokumentation konkreter Implementierungsdetails und Stolpersteine, die während der Entwicklung aufgetreten sind.
+
+## Early Numbering: Vollständige mapped-Response
+
+Bei der Implementierung von `early numbering` in einem draft-fähigen Business Object reicht es nicht, 
+in der `mapped`-Struktur nur den generierten Schlüssel (`%tky` bzw. das Schlüsselfeld) zu setzen. Das Framework erwartet zusätzlich `%key` und `%is_draft` für jede Instanz:
+
+```abap
+APPEND VALUE #( %cid     = entity-%cid
+                %key     = entity-%key
+                %is_draft = entity-%is_draft
+                TicketID = new_id )
+       TO mapped-ZrTicketItem02.
+```
+
+Fehlt eines dieser Felder, wirft das Framework zur Laufzeit `CX_CSP_ACT_RESPONSE` mit der Meldung, dass für eine Instanz weder eine FAILED- noch eine MAPPED-Antwort zurückgegeben 
+wurde – unabhängig davon, ob die eigentliche Nummernvergabe-Logik korrekt ist.
+
+## Case-Sensitivity bei Value-Help-Referenzen
+
+`@Consumption.valueHelpDefinition`-Annotationen referenzieren Felder über den `element`-Parameter. Dieser muss exakt (inklusive Gross-/Kleinschreibung) mit dem tatsächlichen Feldnamen 
+in der referenzierten Value-Help-Entity übereinstimmen:
+
+```abap
+@Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_STATUS_VH', element: 'status' }, useForValidation: true }]
+```
+Eine Abweichung (`Status` statt `status`) führt nicht zu einem Aktivierungsfehler, sondern zu einer stillschweigend nicht funktionierenden Wertehilfe – deutlich schwerer zu diagnostizieren 
+als ein Compile-Fehler.
+
+## Draft-Tabellen und berechnete Felder
+
+Assoziierte/berechnete Felder (z. B. `_Status.status_text as StatusText`) dürfen nicht auf Ebene der Root View (Interface View) aufgelöst werden, wenn das Business Object draft-fähig ist. 
+Die automatisch generierte Draft-Tabelle bildet nur physische Tabellenfelder ab; ein Verweis auf ein nicht-persistentes, assoziiertes Feld führt zum Fehler:
+
