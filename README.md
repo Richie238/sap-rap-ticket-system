@@ -77,19 +77,24 @@ notes/                      Technische Notizen zu Implementierungsdetails
 ## Screenshots
 
 ### Ticketübersicht
-![Ticketliste](screenshots/01_ticket_list.png)
+Alle Tickets mit Klartext-Anzeige für Priorität, Status und Kategorie, inklusive vollständiger Filterleiste.
 
-### Neues Ticket anlegen (automatische ID-Vergabe)
-![Neues Ticket](screenshots/02_new_ticket.png)
+![Ticketliste](11_screenshots/01_ticket_list.png)
 
 ### Ticket-Detailansicht
-![Ticket Detail](screenshots/03_ticket_detail.png)
+Einzelansicht eines Tickets mit automatisch vergebener ID und allen Stammdaten.
+
+![Ticket Detail](11_screenshots/03_ticket_detail.png)
 
 ### Wertehilfe mit Klartext-Anzeige
-![Value Help](screenshots/04_value_help.png)
+F4-Wertehilfe mit Code- und Textanzeige, z. B. für das Statusfeld.
+
+![Value Help](11_screenshots/04_value_help.png)
 
 ### Validierung bei fehlenden Pflichtfeldern
-![Validation](screenshots/05_validation_error.png)
+Serverseitige Validierung verhindert das Speichern, solange Pflichtfelder nicht ausgefüllt sind.
+
+![Validation](11_screenshots/05_validation_error.png)
 
 ## Autor
 
