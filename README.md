@@ -74,6 +74,28 @@ notes/                      Technische Notizen zu Implementierungsdetails
 - **Validation – Fälligkeitsdatum:** Das Fälligkeitsdatum muss in der Zukunft liegen.
 - **Early Numbering:** Die TicketID wird serverseitig unter Berücksichtigung sowohl der aktiven als auch der Draft-Tabelle eindeutig vergeben.
 
+## Features
+
+✔ Draft Handling
+
+✔ Early Numbering
+
+✔ Determinations
+
+✔ Validations
+
+✔ Value Helps
+
+✔ Search
+
+✔ Filter
+
+✔ OData V4
+
+✔ Fiori Elements
+
+✔ Metadata Extensions
+
 ## Screenshots
 
 ### Ticketübersicht
