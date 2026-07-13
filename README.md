@@ -15,19 +15,27 @@ Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickel
 
 ## Architektur
 
-\`\`\`
-Datenbanktabelle
-      ↓
-Interface View (CDS)
-      ↓
-Behavior Definition ←→ Behavior Pool (ABAP-Klasse)
-      ↓
-Projection View
-      ↓
-Service Definition → Service Binding (OData V4)
-      ↓
-Fiori Elements UI
-\`\`\`
+```markdown
+## Architektur
+
+```mermaid
+flowchart LR
+    DB[(SAP HANA<br/>Persistenz)]
+    IV[Interface View<br/>ZR_TICKET_ITEM_03]
+    BDEF[Behavior Definition]
+    BPOOL[Behavior Pool<br/>Determinations · Validations · Actions]
+    PV[Projection View<br/>ZC_TICKET_ITEM_03]
+    SD[Service Definition]
+    SB[Service Binding<br/>OData V4]
+    UI[Fiori Elements UI]
+
+    DB --> IV
+    IV --> BDEF
+    BDEF <--> BPOOL
+    BDEF --> PV
+    PV --> SD
+    SD --> SB
+    SB --> UI
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
 
