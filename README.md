@@ -16,15 +16,15 @@ Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickel
 ## Architektur
 
 Datenbanktabelle
-↓
+       ↓
 Interface View (CDS)
-↓
+       ↓
 Behavior Definition ←→ Behavior Pool (ABAP-Klasse)
-↓
+       ↓
 Projection View
-↓
+       ↓
 Service Definition → Service Binding (OData V4)
-↓
+       ↓
 Fiori Elements UI
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
@@ -83,6 +83,8 @@ notes/                      Technische Notizen zu Implementierungsdetails
 ✔ Determinations
 
 ✔ Validations
+
+✔ Actions
 
 ✔ Value Helps
 
