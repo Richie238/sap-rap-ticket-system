@@ -15,15 +15,17 @@ Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickel
 
 ## Architektur
 
-```mermaid
-flowchart TD
-    A[Datenbanktabelle] --> B[Interface View<br/>CDS Root Entity]
-    B --> C[Behavior Definition]
-    C <--> D[Behavior Pool<br/>ABAP-Klasse]
-    C --> E[Projection View]
-    E --> F[Service Definition]
-    F --> G[Service Binding<br/>OData V4]
-    G --> H[Fiori Elements UI]
+Datenbanktabelle
+      ↓
+Interface View (CDS)
+      ↓
+Behavior Definition ←→ Behavior Pool (ABAP-Klasse)
+      ↓
+Projection View
+      ↓
+Service Definition → Service Binding (OData V4)
+      ↓
+Fiori Elements UI
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
 
