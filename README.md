@@ -118,6 +118,11 @@ Serverseitige Validierung verhindert das Speichern, solange Pflichtfelder nicht 
 
 ![Validation](11_screenshots/05_validation_error.png)
 
+### Action: Ticket schliessen
+Über eine benutzerdefinierte Action kann ein Ticket direkt aus der Objektansicht geschlossen werden – der Status wird automatisch auf "Geschlossen" gesetzt.
+
+![Ticket schliessen](11_screenshots/06_ticket_close_action.png)
+
 ## Autor
 
 Ricardo Varesse Noubissi Simo
