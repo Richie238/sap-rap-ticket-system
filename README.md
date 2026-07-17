@@ -1,6 +1,6 @@
-# SAP RAP Ticket System
+# NovaDesk
 
-Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickelt mit dem SAP RESTful Application Programming Model (RAP) auf der SAP Business Technology Platform.
+NovaDesk ist eine moderne Helpdesk-Anwendung für IT-Support- und Change-Request-Prozesse, entwickelt mit dem SAP RESTful Application Programming Model (RAP) auf der SAP Business Technology Platform.
 
 ## Funktionsumfang
 
@@ -15,7 +15,7 @@ Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickel
 
 ## Architektur
 
-SAP RAP Ticket System
+NovaDesk Architecture
 
 Datenbanktabelle
       ↓
@@ -88,6 +88,8 @@ notes/                      Technische Notizen zu Implementierungsdetails
 
 ✔ Actions
 
+✔ Composition (1:n Beziehungen) – Ticketverlauf
+
 ✔ Value Helps
 
 ✔ Search
@@ -99,6 +101,14 @@ notes/                      Technische Notizen zu Implementierungsdetails
 ✔ Fiori Elements
 
 ✔ Metadata Extensions
+
+## Nächste Ausbauschritte
+
+⬜ Attachments
+
+⬜ Email Integration
+
+⬜ Notification Handling
 
 ## Screenshots
 
@@ -136,7 +146,8 @@ Die Ticketbeschreibung ist als eigener Kommunikationsbereich implementiert. Das 
 ## Autor
 
 Ricardo Varesse Noubissi Simo
-SAP Solution Consultant Technology · ABAP Cloud & CPI Integration Developer (SAP-zertifiziert)
+SAP Solution Consultant Technology 
+SAP Certified ABAP Cloud & CPI Integration Developer
 
 [LinkedIn](https://www.linkedin.com/in/ricardo-varesse-noubissi-simo-340319172/)
   
