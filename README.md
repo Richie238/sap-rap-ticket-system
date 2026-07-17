@@ -125,6 +125,12 @@ Serverseitige Validierung verhindert das Speichern, solange Pflichtfelder nicht 
 
 ![Ticket schliessen](11_screenshots/06_ticket_close_action.png)
 
+### Ticketbeschreibung
+
+Die Ticketbeschreibung ist als eigener Kommunikationsbereich implementiert. Das Anliegen kann mehrzeilig erfasst werden und bildet den ersten Eintrag der späteren Ticketkommunikation. Weitere Nachrichten können im Verlauf ergänzt werden.
+
+![Custom Ticketbeschreibung](11_screenshots/07_custom_description_section.png)
+
 ## Autor
 
 Ricardo Varesse Noubissi Simo
