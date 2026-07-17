@@ -15,17 +15,30 @@ Ticket-Management-System für IT-Support- und Change-Request-Prozesse, entwickel
 
 ## Architektur
 
-Datenbanktabelle
-      ↓
-Interface View (CDS)
-      ↓
-Behavior Definition ←→ Behavior Pool (ABAP-Klasse)
-      ↓
-Projection View
-      ↓
-Service Definition → Service Binding (OData V4)
-      ↓
-Fiori Elements UI
+SAP RAP Ticket System
+
+Database Tables
+        │
+        ▼
+ CDS Interface Views
+        │
+        ▼
+Behavior Definitions
+        │
+        ▼
+Behavior Pool (ABAP)
+        │
+        ▼
+Projection Views
+        │
+        ▼
+Service Definition
+        │
+        ▼
+    OData V4
+        │
+        ▼
+SAP Fiori Elements
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
 
