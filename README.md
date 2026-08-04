@@ -31,6 +31,7 @@ Fiori Elements UI
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
 
+![Ticket schliessen](11_screenshots/novadesk_rap_architektur.svg)
 ## Projektstruktur
 
 01_database_tables/         Persistenz- und Referenztabellen
