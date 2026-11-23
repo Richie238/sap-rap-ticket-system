@@ -8,6 +8,8 @@
 annotate view ZC_TICKET_ITEM_03 with
 {
   @UI.facet: [
+    { id: 'HeaderStatus', purpose: #HEADER, position: 10, type: #DATAPOINT_REFERENCE, targetQualifier: 'Status' },
+    { id: 'HeaderPriority', purpose: #HEADER, position: 20, type: #DATAPOINT_REFERENCE, targetQualifier: 'Priority' },
     { id: 'TicketData', label: 'Ticketdaten', position: 10, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TicketData' },
     { id: 'Responsibility', label: 'Zuständigkeit', position: 20, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Responsibility' },
     { id: 'TicketDescription', label: 'Beschreibung', position: 30, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TicketDescription' },
@@ -25,6 +27,8 @@ annotate view ZC_TICKET_ITEM_03 with
   Subject;
 
   @EndUserText.label: 'Status'
+  @UI.textArrangement: #TEXT_ONLY
+  @UI.dataPoint: { qualifier: 'Status', title: 'Status' }
   @UI.fieldGroup: [ { qualifier: 'TicketData', position: 30, label: 'Status' } ]
   @UI.lineItem: [ { position: 30, importance: #HIGH, label: 'Status' } ]
   @UI.selectionField: [ { position: 20 } ]
@@ -32,19 +36,23 @@ annotate view ZC_TICKET_ITEM_03 with
   Status;
 
   @EndUserText.label: 'Priorität'
+  @UI.textArrangement: #TEXT_ONLY
+  @UI.dataPoint: { qualifier: 'Priority', title: 'Priorität' }
   @UI.fieldGroup: [ { qualifier: 'TicketData', position: 40, label: 'Priorität' } ]
   @UI.lineItem: [ { position: 40, importance: #MEDIUM, label: 'Priorität' } ]
   @UI.selectionField: [ { position: 30 } ]
   Priority;
 
   @EndUserText.label: 'Kategorie'
+  @UI.textArrangement: #TEXT_ONLY
   @UI.fieldGroup: [ { qualifier: 'TicketData', position: 50, label: 'Kategorie' } ]
+  @UI.lineItem: [ { position: 60, importance: #MEDIUM, label: 'Kategorie' } ]
   @UI.selectionField: [ { position: 50 } ]
   Category;
 
   @EndUserText.label: 'Fälligkeit'
   @UI.fieldGroup: [ { qualifier: 'TicketData', position: 60, label: 'Fälligkeit' } ]
-  @UI.lineItem: [ { position: 60, importance: #MEDIUM, label: 'Fälligkeit' } ]
+  @UI.lineItem: [ { position: 70, importance: #MEDIUM, label: 'Fälligkeit' } ]
   @UI.selectionField: [ { position: 60 } ]
   DueDate;
 
