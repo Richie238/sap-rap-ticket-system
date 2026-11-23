@@ -1,0 +1,6 @@
+@EndUserText.label: 'ZR_TICKET_ITEM_03000'
+@MappingRole: true
+define role ZR_TICKET_ITEM_03000 {
+  grant select on ZR_TICKET_ITEM_03000
+  where TRUE;
+}

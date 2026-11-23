@@ -1,0 +1,14 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "ZUI_TICKET_ITEM_03_O4",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "appType": "customInboundService",
+    "uiadId": "",
+    "transactionCode": "",
+    "restrictionTypeMigStatus": "notMigrated"
+  }
+}

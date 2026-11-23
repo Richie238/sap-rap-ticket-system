@@ -1,0 +1,22 @@
+{
+  "bindingType": "ODATA",
+  "odataInfoUri": [
+    {
+      "href": "/sap/bc/adt/businessservices/odatav4/ZUI_TICKET_ITEM_03_O4"
+    }
+  ],
+  "isPublished": true,
+  "bindingCategory": "0",
+  "services": [
+    {
+      "name": "ZUI_TICKET_ITEM_03_O4",
+      "content": [
+        {
+          "serviceDefinition": "ZUI_TICKET_ITEM_03_O4",
+          "serviceVersion": "0001"
+        }
+      ]
+    }
+  ],
+  "odataVersion": "V4"
+}

@@ -1,0 +1,16 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "NovaDesk RAP Ticket Management",
+    "originalLanguage": "en"
+  },
+  "generalInformation": {
+    "type": "development",
+    "superPackage": "ZLOCAL",
+    "applicationComponent": "",
+    "softwareComponent": "ZLOCAL",
+    "transportLayer": "",
+    "isEncapsulated": true,
+    "defaultAbapLanguageVersion": "cloudDevelopment"
+  }
+}

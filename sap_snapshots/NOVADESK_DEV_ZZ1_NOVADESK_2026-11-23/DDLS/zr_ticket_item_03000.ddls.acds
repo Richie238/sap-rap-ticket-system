@@ -1,0 +1,27 @@
+@AccessControl.authorizationCheck: #MANDATORY
+@Metadata.allowExtensions: true
+@ObjectModel.sapObjectNodeType.name: 'ZTICKET_ITEM_03'
+@EndUserText.label: '###GENERATED Core Data Service Entity'
+define root view entity ZR_TICKET_ITEM_03000
+  as select from ZTICKET_ITEM_03
+{
+  key ticket_id as TicketID,
+  subject as Subject,
+  requester_id as RequesterID,
+  assigned_to as AssignedTo,
+  priority as Priority,
+  status as Status,
+  category as Category,
+  description as Description,
+  due_date as DueDate,
+  @Semantics.user.createdBy: true
+  created_by as CreatedBy,
+  @Semantics.systemDateTime.createdAt: true
+  created_at as CreatedAt,
+  @Semantics.user.localInstanceLastChangedBy: true
+  last_changed_by as LastChangedBy,
+  @Semantics.systemDateTime.localInstanceLastChangedAt: true
+  local_last_changed_at as LocalLastChangedAt,
+  @Semantics.systemDateTime.lastChangedAt: true
+  last_changed_at as LastChangedAt
+}
