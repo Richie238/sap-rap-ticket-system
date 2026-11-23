@@ -28,6 +28,8 @@ authorization master( global )
   update;
   delete;
 
+  determination setStatusToOpen on modify { create; }
+
   draft action Activate optimized;
   draft action Discard;
   draft action Edit;

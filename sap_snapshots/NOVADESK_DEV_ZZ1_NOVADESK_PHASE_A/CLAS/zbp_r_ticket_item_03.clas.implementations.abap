@@ -5,9 +5,33 @@ CLASS LHC_ZR_TICKET_ITEM_03000 DEFINITION INHERITING FROM CL_ABAP_BEHAVIOR_HANDL
         IMPORTING
            REQUEST requested_authorizations FOR ZrTicketItem03000
         RESULT result.
+
+    METHODS setStatusToOpen FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR ZrTicketItem03000~setStatusToOpen.
 ENDCLASS.
 
 CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
   METHOD GET_GLOBAL_AUTHORIZATIONS.
+  ENDMETHOD.
+
+  METHOD setStatusToOpen.
+    CONSTANTS status_open TYPE zticket_item_03-status VALUE 'O'.
+
+    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY ZrTicketItem03000
+        FIELDS ( Status )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(tickets).
+
+    DELETE tickets WHERE Status IS NOT INITIAL.
+    IF tickets IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY ZrTicketItem03000
+        UPDATE FIELDS ( Status )
+        WITH VALUE #( FOR ticket IN tickets
+          ( %tky = ticket-%tky Status = status_open ) ).
   ENDMETHOD.
 ENDCLASS.

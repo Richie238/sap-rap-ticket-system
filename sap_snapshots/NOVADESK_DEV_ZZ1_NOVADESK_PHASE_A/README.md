@@ -4,4 +4,4 @@ ADT-MCP-Rückgaben aus dem zuletzt rein lesend inventarisierten Stand in NOVADES
 
 Die Sicherung dokumentiert aktive Quellen. Sie enthält keine Tabelleninhalte, offenen Draft-Datensätze, inaktiven Editorstände, effektiven Rollenzuweisungen oder Zugangsdaten. Die sechs STOB-Entitäten werden über ihre DDLS-Quellen abgedeckt. Für SCO2 meldet MCP fehlende AFF-Unterstützung. Die Ablage ist eine Quellsicherung und keine geprüfte abapGit-Serialisierung oder Wiederherstellung von Geschäftsdaten.
 
-Phase-A-Fortschreibung. Die aktualisierte DDLX wurde nach jeder Änderung aktiv aus SAP zurückgelesen. Die übrigen Dateien stammen aus der verifizierten 23.-November-Baseline.
+Phase-A-Fortschreibung. Die aktualisierte DDLX wurde nach jeder Änderung aktiv aus SAP zurückgelesen. Die Root-BDEF und das lokale Klassen-Include mit der Statusinitialisierung wurden ebenfalls nach Aktivierung aus SAP zurückgelesen. Die übrigen Dateien stammen aus der verifizierten 23.-November-Baseline.
