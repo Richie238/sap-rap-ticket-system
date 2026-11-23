@@ -74,6 +74,23 @@ SAP ADT meldete für Root-BDEF und Behavior-Pool eine erfolgreiche Syntaxprüfun
 
 Nicht separat nachgewiesen sind eine fremde Entwurfssitzung, ein abgelaufener Draft-Lock, ein nichtleerer unbekannter Statuscode und der Aufruf des Action-Handlers unter Umgehung der vorgelagerten RAP-Feature-Prüfung. Der beobachtete Negativaufruf lieferte eine RAP-Sperrmeldung und belegt daher nicht separat die eigene `failed`-/`reported`-Meldung des Handlers.
 
+## Automatische Ticketnummern am 23. November 2026
+
+Geprüft in SAP ADT und in der deutschen Fiori-Vorschau von `NOVADESK_DEV`, Mandant 100. Der aktive Schlüssel sowie die Schlüssel beider Draft-Tabellen sind `NUMC(8)`. Vor dem Wechsel enthielt die aktive Tabelle `00000020` und `00003030`. Beide Draft-Tabellen waren leer. Die ADT-Verwendungsanalyse fand zwei Root-Behaviors mit derselben aktiven Tabelle. Die veröffentlichte Projektion verwendet `ZR_TICKET_ITEM_03000`. Der ältere Root `ZR_TICKET_ITEM_03` hat einen schreibgeschützten Schlüssel und im aktiven gemeinsamen Pool keinen eigenen Nummerierungs-Handler.
+
+| Prüfung | Beobachtung |
+| --- | --- |
+| Nummernkreis | Die ABAP-Konsole hat das interne Intervall `ZNOVATKT/01` mit Grenzen `10000–99999` und deaktiviertem Wiederanlauf aus SAP zurückgelesen. Das aktive Nummernkreisobjekt wurde exportiert. |
+| SAP-Syntax, Aktivierung, Rücklesen | Root-BDEF, Behavior-Pool und Setup-Klasse wurden erfolgreich geprüft, aktiviert und aus SAP zurückgelesen. |
+| Draft-Anlage | „Anlegen“ öffnete das Formular ohne Nummerneingabe. Kopf und Ticketdaten zeigten sofort die schreibgeschützte Nummer `10000`. |
+| Zweiter gleichzeitig offener Draft | In einem zweiten Fiori-Tab derselben SAP-Anmeldung wurde bei offenem ersten Entwurf ein weiterer Entwurf mit Nummer `10010` angelegt. |
+| Draft aktivieren und bestehendes Ticket bearbeiten | Fiori meldete „Objekt angelegt“, die aktive Nummer blieb `10000`. Auch im Bearbeitungsentwurf war die Nummer schreibgeschützt. „Sichern“ behielt die Nummer bei. |
+| Bestandsanzeige und Testdaten | Die Fiori-Liste zeigte weiterhin `20` und `3030`. Testticket `10000` und Testentwurf `10010` bleiben im Mandanten 100 erhalten. |
+
+Die atomare Reservierung erfolgt über `CL_NUMBERRANGE_RUNTIME=>NUMBER_GET`. Die Nummerierung prüft die reservierte Nummer zusätzlich per RAP EML gegen aktive Daten und Drafts des veröffentlichten BOs. Das Register nutzt Hauptspeicherpufferung, daher sind Lücken möglich. Die fünfstelligen neuen Werte werden im bestehenden Schlüssel mit führenden Nullen auf acht Stellen gespeichert. Fiori unterdrückt die führenden Nullen des Schlüsselfelds bei der Anzeige, daher werden Bestandsnummern wie `20` nicht als `00020` dargestellt. Ein Test mit zwei getrennten SAP-Benutzern und eine Intervallerschöpfung wurden nicht ausgeführt. [SAP Early Numbering](https://help.sap.com/docs/abap-cloud/abap-rap/developing-early-unmanaged-numbering) · [SAP Nummernkreis-Laufzeit](https://help.sap.com/docs/sap-btp-abap-environment/abap-environment/getting-numbers-from-interval)
+
+Das Intervall ist mandantenabhängig. Vor Aktivierung in einem anderen Zielmandanten muss das Intervall separat eingerichtet und gegen die aktiven Daten, beide Draft-Tabellen sowie andere Schreiber auf dieselbe Persistenz geprüft werden. `ZCL_NOVADESK_NR_SETUP` richtet das Intervall in Mandant 100 ein und setzt den Stand eines vorhandenen Intervalls nicht zurück.
+
 ## Historischer Prüfstand vom 22. November 2026
 
 Stand 22. November 2026. Alle folgenden Tests im Zielsystem sind **NICHT GETESTET**. Der lokale ADT-MCP-Endpunkt war nicht erreichbar. Für diese Tests wurde kein SAP- oder Browserwerkzeug ausgeführt, und es liegen weder HTTP-Antworten noch eine Service- oder Preview-URL vor. Historische Screenshots zeigen den früheren Stand.

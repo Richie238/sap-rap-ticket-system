@@ -6,6 +6,9 @@ CLASS LHC_ZR_TICKET_ITEM_03000 DEFINITION INHERITING FROM CL_ABAP_BEHAVIOR_HANDL
            REQUEST requested_authorizations FOR ZrTicketItem03000
         RESULT result.
 
+    METHODS early_numbering_create FOR NUMBERING
+      IMPORTING entities FOR CREATE ZrTicketItem03000.
+
     METHODS setStatusToOpen FOR DETERMINE ON MODIFY
       IMPORTING keys FOR ZrTicketItem03000~setStatusToOpen.
     METHODS validateAssignedTo FOR VALIDATE ON SAVE
@@ -27,6 +30,65 @@ ENDCLASS.
 
 CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
   METHOD GET_GLOBAL_AUTHORIZATIONS.
+  ENDMETHOD.
+
+  METHOD early_numbering_create.
+    CONSTANTS range_object TYPE cl_numberrange_runtime=>nr_object VALUE 'ZNOVATKT'.
+    CONSTANTS range_interval TYPE cl_numberrange_runtime=>nr_interval VALUE '01'.
+
+    LOOP AT entities INTO DATA(entity).
+      " RAP can pass the already numbered key again during draft activation.
+      IF entity-TicketID IS NOT INITIAL.
+        APPEND VALUE #( %cid = entity-%cid %key = entity-%key %is_draft = entity-%is_draft )
+          TO mapped-ZrTicketItem03000.
+        CONTINUE.
+      ENDIF.
+
+      DATA(ticket_id) = VALUE zticket_item_03-ticket_id( ).
+      TRY.
+          cl_numberrange_runtime=>number_get(
+            EXPORTING object = range_object nr_range_nr = range_interval
+            IMPORTING number = DATA(number) returncode = DATA(return_code)
+                      returned_quantity = DATA(quantity) ).
+          DATA(number_value) = CONV int8( number ).
+          IF quantity = 1 AND ( return_code IS INITIAL OR return_code = '1' OR return_code = '2' )
+              AND number_value BETWEEN 10000 AND 99999.
+            ticket_id = CONV #( number_value ).
+          ENDIF.
+        CATCH cx_nr_object_not_found cx_number_ranges cx_sy_conversion_error.
+          CLEAR ticket_id.
+      ENDTRY.
+
+      IF ticket_id IS NOT INITIAL.
+        READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+          ENTITY ZrTicketItem03000 FIELDS ( TicketID )
+          WITH VALUE #( ( TicketID = ticket_id %is_draft = if_abap_behv=>mk-off )
+                        ( TicketID = ticket_id %is_draft = if_abap_behv=>mk-on ) )
+          RESULT DATA(occupied)
+          FAILED DATA(availability_failed).
+        IF occupied IS NOT INITIAL
+            OR NOT line_exists( availability_failed-ZrTicketItem03000[
+              TicketID = ticket_id %is_draft = if_abap_behv=>mk-off %fail-cause = if_abap_behv=>cause-not_found ] )
+            OR NOT line_exists( availability_failed-ZrTicketItem03000[
+              TicketID = ticket_id %is_draft = if_abap_behv=>mk-on %fail-cause = if_abap_behv=>cause-not_found ] ).
+          CLEAR ticket_id.
+        ENDIF.
+      ENDIF.
+
+      IF ticket_id IS INITIAL.
+        APPEND VALUE #( %cid = entity-%cid %is_draft = entity-%is_draft
+                        %fail-cause = if_abap_behv=>cause-unspecific ) TO failed-ZrTicketItem03000.
+        APPEND VALUE #( %cid = entity-%cid %is_draft = entity-%is_draft
+                        %msg = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text = 'Es konnte keine eindeutige Ticketnummer vergeben werden.' ) )
+          TO reported-ZrTicketItem03000.
+        CONTINUE.
+      ENDIF.
+
+      APPEND VALUE #( %cid = entity-%cid TicketID = ticket_id %is_draft = entity-%is_draft )
+        TO mapped-ZrTicketItem03000.
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD setStatusToOpen.

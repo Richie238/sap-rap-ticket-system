@@ -9,20 +9,15 @@ draft table ZTCKT_ITM_0000_D
 etag master LocalLastChangedAt
 lock master total etag LastChangedAt
 authorization master( global )
+early numbering
 {
-  field ( mandatory : create )
-   TicketID;
-
   field ( readonly )
+   TicketID,
    CreatedBy,
    CreatedAt,
    LastChangedBy,
    LocalLastChangedAt,
    LastChangedAt;
-
-  field ( readonly : update )
-   TicketID;
-
 
   create;
   update;
