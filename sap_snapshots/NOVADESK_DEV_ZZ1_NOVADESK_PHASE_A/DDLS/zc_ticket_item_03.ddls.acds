@@ -2,7 +2,7 @@
 @Metadata.allowExtensions: true
 @Metadata.ignorePropagatedAnnotations: true
 @Endusertext: {
-  Label: '###GENERATED Core Data Service Entity'
+  Label: 'NovaDesk Ticket'
 }
 @Objectmodel: {
   Sapobjectnodetype.Name: 'ZTICKET_ITEM_03'
