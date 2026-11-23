@@ -1,0 +1,89 @@
+# NovaDesk – Fiori- und Laufzeittests
+
+## Fiori-Abnahme für UX Phase 1 am 23. November 2026
+
+Getestet in Chrome in der SAP Fiori Elements App Preview für `ZC_TICKET_ITEM_03` am veröffentlichten OData-V4-UI-Binding `ZUI_TICKET_ITEM_03_O4`, `NOVADESK_DEV`, Mandant 100. Getesteter Annotationsstand auf GitHub ist `26c1c0f89233a9e799729320b8fb35013d8238fd`.
+
+### Laufzeitsprache
+
+| Vorschauparameter | Beobachtung auf Liste und Objektseite |
+| --- | --- |
+| `sap-ui-language=EN` im bestehenden Preview-Link | Die Standardaktionen erschienen als „Edit“ und „Delete“. Die Fälligkeit von Ticket `3030` erschien als „Nov 24, 2026“. |
+| `sap-ui-language=DE` im separaten Preview-Tab | Dieselben Aktionen erschienen als „Bearbeiten“ und „Löschen“. Die Fälligkeit erschien als „24.11.2026“, die Auditzeitstempel im Format `TT.MM.JJJJ, HH:mm:ss`. |
+
+Der URL-Parameter steuert die beobachtete Umschaltung. Die Kategorietexte wie „Change Request“ sind gespeicherte Referenzwerte. Der Titel der Preview-Shell blieb „Preview for Fiori Elements App“. Für den Sprachvergleich genügte der separate DE-Tab. RAP- und Metadata-Extension-Quellen wurden für diese Abnahme unverändert verwendet.
+
+### Ticketliste, Suche und Filter
+
+Die Liste zeigte Ticketnummer, Betreff, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit in dieser Reihenfolge. Beschreibung und Auditfelder waren in den Objektseitenabschnitten sichtbar. Zusätzlich zu den sechs Fachfiltern zeigte Fiori den Draft-Filter „Bearbeitungsstatus“.
+
+| Fachfilter | Einzeln getesteter Wert | Ergebnis |
+| --- | --- | --- |
+| Ticketnummer | `3030` | Genau Ticket `3030` |
+| Status | `B` – In Bearbeitung | Genau Ticket `3030` |
+| Priorität | `2` – Mittel | Genau Ticket `3030` |
+| Bearbeiter | `IT` | Genau Ticket `3030` |
+| Kategorie | `C` – Change Request | Genau Ticket `3030` |
+| Fälligkeit | `24.11.2026` | Genau Ticket `3030` |
+
+Die Freitextsuche fand jeweils genau einen Treffer. „SAP Team“ fand Ticket `3030` über den Anforderer. „NovaDesk UX QA“ und „Fiori Lifecycle Test“ fanden das Testticket `91261123` über Betreff und Beschreibung.
+
+### Wertehilfen
+
+Alle drei Wertehilfen öffneten sich in der Filterleiste und im Anlegeformular. Bei Status und Priorität erschien deutscher Klartext, bei Kategorie erschienen die gespeicherten Referenztexte.
+
+| Wertehilfe | Angezeigte Einträge | Nutzung im Formular |
+| --- | --- | --- |
+| Status | B In Bearbeitung, G Geschlossen, L Gelöst, O Offen | „In Bearbeitung“ und „Gelöst“ ausgewählt und gespeichert |
+| Priorität | 1 Niedrig, 2 Mittel, 3 Hoch, 4 Dringend | „Mittel“ ausgewählt und gespeichert |
+| Kategorie | A Access Request, C Change Request, H Hardware, I Incident, S Software | „Hardware“ ausgewählt und gespeichert |
+
+### Ticket-Lifecycle
+
+Schreibende Schritte betrafen das eigens angelegte Testticket `91261123` mit Betreff „NovaDesk UX QA“.
+
+| Schritt | Beobachtung |
+| --- | --- |
+| Anlegen | Der Dialog verlangte eine Ticketnummer. Danach öffnete sich der Entwurf mit initialem Status „Offen“. |
+| Speichervalidierung | Ohne Bearbeiter und Fälligkeit blockierte Fiori die Anlage mit den Meldungen „Geben Sie einen Bearbeiter an.“ und „Geben Sie ein Fälligkeitsdatum ab heute an.“. Der Dialog gruppierte die Meldungen unter „Allgemeines“. |
+| Aktivieren und lesen | Mit Bearbeiter IT, Fälligkeit 30.11.2026, Priorität Mittel und Kategorie Hardware meldete Fiori „Objekt angelegt“. Die aktive Objektseite zeigte die Werte. |
+| Bearbeiten und sichern | „Bearbeiten“ öffnete einen Draft. Die Auswahl „In Bearbeitung“ wurde mit „Objekt gesichert“ bestätigt und auf der aktiven Seite angezeigt. |
+| Verwerfen | „Gelöst“ im Entwurf gewählt und den Entwurf verworfen. Fiori meldete „Entwurf verworfen“, die aktive Seite zeigte weiterhin „In Bearbeitung“. |
+| Wiederaufnahme | „Gelöst“ erneut im Entwurf gewählt. Nach Neuladen der Seite blieb der Wert im Entwurf erhalten und ließ sich anschließend sichern. |
+| Schließen und zurücknavigieren | „Ticket schließen“ setzte Kopf und Ticketdaten unmittelbar auf „Geschlossen“. Nach der Rücknavigation zeigte auch die Liste „Geschlossen“. |
+| Löschen und nachprüfen | Das Testticket über die Liste gelöscht. Fiori meldete „Objekt gelöscht“. Die zuvor erfolgreiche Betreffsuche zeigte anschließend „Keine Ergebnisse gefunden“. |
+
+### Offene Punkte
+
+- Die Kategorieanzeige verwendet weiterhin die vorhandenen Referenztexte. Eine Lokalisierung dieser Werte benötigt eine fachliche Entscheidung über die Bezeichnungen und Sprachen.
+- „Ticket schließen“ blieb im Entwurf und nach dem Schließen sichtbar. Die gewünschte Verfügbarkeit je Status, Draft und Rolle ist ein separater fachlicher Prüfpunkt. Ausgeführt wurde die Aktion am aktiven Ticket im Status „Gelöst“.
+- Die Speichermeldungen wurden beobachtet. Direkte Zuordnung oder Fokus am jeweiligen Eingabefeld, ein Datum in der Vergangenheit, schmale Ansichten, Tastaturnavigation und Rollentests wurden in diesem Lauf nicht separat verifiziert.
+- Der Lauf belegt die Fiori-Funktion. OData-Metadaten und Netzwerkanfragen wurden in diesem Lauf nicht separat protokolliert.
+
+## Historischer Prüfstand vom 22. November 2026
+
+Stand 22. November 2026. Alle folgenden Tests im Zielsystem sind **NICHT GETESTET**. Der lokale ADT-MCP-Endpunkt war nicht erreichbar. Für diese Tests wurde kein SAP- oder Browserwerkzeug ausgeführt, und es liegen weder HTTP-Antworten noch eine Service- oder Preview-URL vor. Historische Screenshots zeigen den früheren Stand.
+
+| Prüfebene / Objekt | Werkzeug für den ausstehenden Test | Nächste Aktion und erwarteter Nachweis |
+| --- | --- | --- |
+| RAP-Backend `ZR_TICKET_ITEM_03`, `ZBP_R_TICKET_ITEM_03`, `ZC_TICKET_ITEM_03` | ADT | Aktive Versionen und Aktivierungsmeldungen gemäß Aktivierungsprotokoll erfassen. Bestehende ABAP Unit Tests nach Sichtung ihrer Seiteneffekte ausführen. |
+| OData V4 UI `ZUI_TICKET_ITEM_03_O4` und zugehöriges Binding | ADT und authentifizierter Browser | Aktives Binding öffnen und **Publish** wählen. Die im Editor angezeigte Service-URL verwenden. Service-Dokument, `$metadata` und den dort ausgewiesenen Ticket-Entity-Set mit lesendem GET prüfen. Status, Draft-Aktionen, UI-Annotationen, Value-List-Referenzen und konkrete Fehlermeldungen erfassen. |
+| Fiori Elements `ZC_TICKET_ITEM_03` | ADT und externer Browser | In VS Code Serviceversion → **Preview** → Ticket-Entity wählen. In Eclipse Ticket-Entity im Binding-Editor markieren und **Preview** klicken. Preview-Adresse aus dem tatsächlich geöffneten Browser ohne Tokens oder Sitzungsschlüssel erfassen. Liste, Suche und Detailseite öffnen. |
+| Eigenständige App / Launchpad | SAP Fiori Tools und Ziel-Launchpad | Falls separat beauftragt, eigenständiges UI5-Projekt aus Serviceversion und Entity erzeugen, deployen, Rollen und Navigation einrichten und vom Launchpad aus starten. |
+
+## Ausstehende Funktionsfälle
+
+Nur eigens für den Test angelegte Tickets in einem isolierten Testmandanten verwenden. Tests, die Daten löschen, bleiben unter dem aktuellen Auftrag offen. Für den Delete-Nachweis eine transaktionsisolierte Testumgebung mit Test-Doubles oder eine gesonderte Freigabe für ein eigens angelegtes Testticket verwenden.
+
+| Fall | Erwarteter Nachweis |
+| --- | --- |
+| Create / Read | Neues Ticket mit Bearbeiter und gültigem Datum speichern. Nummer und Status `O` erfassen. Ticket nach Aktualisieren der Liste und in der Detailansicht wiederfinden. |
+| Update | Betreff und Beschreibung des Testtickets bearbeiten, speichern und erneut lesen. ETag und Änderungszeitstempel anhand der Antworten prüfen. |
+| Delete | Über RAP/OData in isolierten Test-Doubles den Testdatensatz entfernen und nachweisen, dass der Schlüssel nicht mehr gelesen werden kann. |
+| Draft | Edit und Resume prüfen. Discard im isolierten Testfall prüfen. Activate muss einen gültigen Entwurf genau einmal speichern. |
+| Early Numbering | Mehrere Creates pro Request, zwei gleichzeitig offene Entwürfe und parallele Browser-Sitzungen prüfen. Alle Schlüssel müssen verschieden und achtstellig sein. |
+| Validations | Bearbeiter und Fälligkeitsdatum jeweils einzeln weglassen. Speichern muss mit feldbezogener Meldung scheitern. Zusätzlich ein vergangenes Datum nach Klärung der Fachregel prüfen. |
+| Value Helps | Priorität, Status und Kategorie öffnen, Referenzwerte und Texte auswählen und nach erneutem Laden prüfen. Ungültigen Wert im isolierten Testfall prüfen. |
+| Autorisierung | Mit berechtigter und unberechtigter Rolle Sichtbarkeit und Mutation gemäß vereinbarter DCL-/RAP-Policy prüfen. |
+
+Pro Ausführung Datum, Zielmandant, Objekt, Aktion, Werkzeug, beobachtetes Ergebnis, Fehlertext und nächste Aktion ergänzen. [SAP Service Binding](https://help.sap.com/docs/abap-cloud/abap-rap/service-binding) · [SAP OData-V4-Editor für VS Code](https://help.sap.com/docs/abap-cloud/abap-development-tools-for-visual-studio-code/working-with-odata-v4-service-a449458b1816492eb972ae5728ca2a28)
