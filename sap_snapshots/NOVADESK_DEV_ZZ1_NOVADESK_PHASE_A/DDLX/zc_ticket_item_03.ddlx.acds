@@ -11,6 +11,13 @@ annotate view ZC_TICKET_ITEM_03 with
     purpose: #STANDARD, 
     position: 10 , 
     type: #IDENTIFICATION_REFERENCE
+  }, {
+    label: 'Ticket Description',
+    id: 'TicketDescription',
+    purpose: #STANDARD,
+    position: 20,
+    type: #FIELDGROUP_REFERENCE,
+    targetQualifier: 'TicketDescription'
   } ]
   @EndUserText.label: 'Ticket Number'
   @UI.identification: [ {
@@ -111,10 +118,8 @@ annotate view ZC_TICKET_ITEM_03 with
   Category;
   
   @EndUserText.label: 'Description'
-  @UI.identification: [ {
-    position: 80 , 
-    label: 'Description'
-  } ]
+  @UI.multiLineText: true
+  @UI.fieldGroup: [ { qualifier: 'TicketDescription', position: 10, label: 'Description' } ]
   @UI.lineItem: [ {
     position: 80 , 
     label: 'Description'
