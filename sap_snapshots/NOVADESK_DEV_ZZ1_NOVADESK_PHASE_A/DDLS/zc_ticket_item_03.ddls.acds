@@ -1,3 +1,4 @@
+@Search.searchable: true
 @Metadata.allowExtensions: true
 @Metadata.ignorePropagatedAnnotations: true
 @Endusertext: {
@@ -13,12 +14,15 @@ define root view entity ZC_TICKET_ITEM_03
   association [1..1] to ZR_TICKET_ITEM_03000 as _BaseEntity on $projection.TICKETID = _BaseEntity.TICKETID
 {
   key TicketID,
+  @Search.defaultSearchElement: true
   Subject,
+  @Search.defaultSearchElement: true
   RequesterID,
   AssignedTo,
   Priority,
   Status,
   Category,
+  @Search.defaultSearchElement: true
   Description,
   DueDate,
   @Semantics: {
