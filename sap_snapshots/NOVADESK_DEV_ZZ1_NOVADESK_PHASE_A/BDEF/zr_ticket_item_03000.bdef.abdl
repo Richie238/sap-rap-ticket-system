@@ -34,7 +34,14 @@ authorization master( global )
   draft action Discard;
   draft action Edit;
   draft action Resume;
-  draft determine action Prepare;
+  validation validateAssignedTo on save { create; field AssignedTo; }
+  validation validateDueDate on save { create; field DueDate; }
+
+  draft determine action Prepare
+  {
+    validation validateAssignedTo;
+    validation validateDueDate;
+  }
 
   mapping for ZTICKET_ITEM_03 corresponding extensible
   {
