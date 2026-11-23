@@ -28,7 +28,7 @@ authorization master( global )
   update;
   delete;
 
-  action ( authorization: update ) closeTicket result [1] $self;
+  action ( features: instance, authorization: update ) closeTicket result [1] $self;
 
   determination setStatusToOpen on modify { create; }
 

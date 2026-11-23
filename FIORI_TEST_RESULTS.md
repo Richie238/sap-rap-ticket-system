@@ -60,6 +60,20 @@ Schreibende Schritte betrafen das eigens angelegte Testticket `91261123` mit Bet
 - Die Speichermeldungen wurden beobachtet. Direkte Zuordnung oder Fokus am jeweiligen Eingabefeld, ein Datum in der Vergangenheit, schmale Ansichten, Tastaturnavigation und Rollentests wurden in diesem Lauf nicht separat verifiziert.
 - Der Lauf belegt die Fiori-Funktion. OData-Metadaten und Netzwerkanfragen wurden in diesem Lauf nicht separat protokolliert.
 
+## Instanzsteuerung für „Ticket schließen“ am 23. November 2026
+
+SAP ADT meldete für Root-BDEF und Behavior-Pool eine erfolgreiche Syntaxprüfung und Aktivierung. Beide aktiven Quellen wurden zurückgelesen. Die Prüfung verwendet die RAP-EML-Leseoperation mit `%is_draft` für die Entwurfsversion desselben Schlüssels. Nur die EML-Rückmeldung „nicht gefunden“ für den Entwurf gibt eine zulässige aktive Instanz frei. Beide Handler verwenden dieselbe Prüfung. [SAP EML für Draft-BOs](https://help.sap.com/docs/abap-cloud/abap-rap/changing-and-reading-instances-of-draft-bo)
+
+| Fiori-Preview im Mandanten 100 | Beobachtung |
+| --- | --- |
+| Eigenes Testticket `91261124` aktiv und ohne Entwurf | Aus Offen, In Bearbeitung und Gelöst jeweils über die Aktion geschlossen. Nach jeder Ausführung zeigte die Objektseite sofort „Geschlossen“ und deaktivierte die Aktion. |
+| Anlege- und Bearbeitungsentwurf | Aktion jeweils sichtbar, aber deaktiviert. |
+| Gespeicherte Version bei eigenem offenem Bearbeitungsentwurf | Nach Aktualisierung war die Aktion deaktiviert. Ein vor der Entwurfsanlage geladener zweiter Tab konnte sie noch auslösen. SAP wies den Aufruf mit einer Sperrmeldung ab, der Status blieb „Offen“. Nach Verwerfen war die Aktion wieder verfügbar. |
+| Aktiver Altbestand mit leerem Status | Aktion deaktiviert. Das Ticket wurde nur gelesen. |
+| RAP-Standardoperationen | Das eigene Testticket ließ sich bearbeiten, über einen Entwurf speichern und am Ende löschen. Die aktualisierte Liste zeigte nur die beiden vorhandenen Bestandstickets. |
+
+Nicht separat nachgewiesen sind eine fremde Entwurfssitzung, ein abgelaufener Draft-Lock, ein nichtleerer unbekannter Statuscode und der Aufruf des Action-Handlers unter Umgehung der vorgelagerten RAP-Feature-Prüfung. Der beobachtete Negativaufruf lieferte eine RAP-Sperrmeldung und belegt daher nicht separat die eigene `failed`-/`reported`-Meldung des Handlers.
+
 ## Historischer Prüfstand vom 22. November 2026
 
 Stand 22. November 2026. Alle folgenden Tests im Zielsystem sind **NICHT GETESTET**. Der lokale ADT-MCP-Endpunkt war nicht erreichbar. Für diese Tests wurde kein SAP- oder Browserwerkzeug ausgeführt, und es liegen weder HTTP-Antworten noch eine Service- oder Preview-URL vor. Historische Screenshots zeigen den früheren Stand.
