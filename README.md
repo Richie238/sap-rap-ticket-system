@@ -5,8 +5,8 @@ NovaDesk ist eine moderne Helpdesk-Anwendung für IT-Support- und Change-Request
 ## Funktionsumfang
 
 - Vollständiges Ticket-Lifecycle-Management mit Draft-Handling (Anlegen, Bearbeiten, Aktivieren, Verwerfen)
-- Automatische ID-Vergabe (Early Numbering)
-- Automatisierte Statussteuerung beim Anlegen neuer Tickets
+- Automatische, schreibgeschützte Ticketnummer ab dem ersten Entwurf
+- Initialstatus „Offen“ und zustandsabhängige Aktion „Ticket schließen“
 - Serverseitige Validierung von Pflichtfeldern und Geschäftsregeln
 - Kategorisierung nach Typ (Incident, Change Request, Hardware, Software, Access Request)
 - Priorisierung (Niedrig bis Dringend)
@@ -15,8 +15,7 @@ NovaDesk ist eine moderne Helpdesk-Anwendung für IT-Support- und Change-Request
 
 ## Architektur
 
-NovaDesk Architecture
-
+```text
 Datenbanktabelle
       ↓
 Interface View (CDS)
@@ -28,21 +27,28 @@ Projection View
 Service Definition → Service Binding (OData V4)
       ↓
 Fiori Elements UI
+```
 
 Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
 
-![Ticket schliessen](11_screenshots/novadesk_rap_architektur.svg)
+![NovaDesk RAP-Architektur](11_screenshots/novadesk_rap_architektur.svg)
+
+Die aktive Kette in `NOVADESK_DEV` verwendet die Tabelle `ZTICKET_ITEM_03`, den RAP-Root `ZR_TICKET_ITEM_03000` mit Behavior-Pool `ZBP_R_TICKET_ITEM_03`, die Projektion `ZC_TICKET_ITEM_03` und das veröffentlichte OData-V4-UI-Binding `ZUI_TICKET_ITEM_03_O4`. Die Oberfläche läuft in der SAP Fiori Elements App Preview.
 ## Projektstruktur
 
+Der [SAP-Snapshot](sap_snapshots/NOVADESK_DEV_ZZ1_NOVADESK_PHASE_A/) enthält die gesicherten Quellen der aktiven Kette einschließlich Nummernkreisobjekt und Einrichtungs-Klasse. Die nachfolgend aufgeführten Verzeichnisse im Repository-Stamm dokumentieren frühere Entwicklungsstände.
+
+```text
 01_database_tables/         Persistenz- und Referenztabellen
 03_interface_views/         Root CDS View Entities
 04_projection_views/        Consumption Views mit UI-Annotationen
 05_behavior_definitions/    RAP Behavior Definitions (Root & Projection)
-06_behavior_implementations/ABAP-Klassen: Determinations, Validations, Numbering
+06_behavior_implementations/ ABAP-Klassen: Determinations, Validations, Numbering
 07_value_helps/             Value-Help-Entities für Status, Priorität, Kategorie
 08_service_definitions/     OData-V4-Service-Definitionen
 09_metadata_extensions/     UI-Facetten, Feldpositionierung, Objekttitel
 notes/                      Technische Notizen zu Implementierungsdetails
+```
 
 ## Technologie-Stack
 
@@ -53,7 +59,7 @@ notes/                      Technische Notizen zu Implementierungsdetails
 | Persistenz | SAP HANA (BTP ABAP Environment) |
 | Frontend | SAP Fiori Elements |
 | Protokoll | OData V4 |
-| Entwicklungsumgebung | SAP Business Application Studio (BAS) |
+| Entwicklungsumgebung | ABAP Development Tools (ADT) für Eclipse und VS Code |
 
 ## Datenmodell
 
@@ -61,9 +67,9 @@ notes/                      Technische Notizen zu Implementierungsdetails
 
 | Feld | Beschreibung |
 |---|---|
-| TicketID | Automatisch vergebene, eindeutige Kennung |
+| TicketID | Automatisch vergebener, schreibgeschützter Schlüssel vom Typ `NUMC(8)` |
 | Subject | Betreff, dient als Objekttitel in der UI |
-| RequesterID | Ersteller des Tickets |
+| RequesterID | Anforderer des Tickets |
 | AssignedTo | Zuständiger Bearbeiter (Pflichtfeld) |
 | Priority | Niedrig / Mittel / Hoch / Dringend |
 | Status | Offen / In Bearbeitung / Geschlossen / Gelöst |
@@ -74,34 +80,17 @@ notes/                      Technische Notizen zu Implementierungsdetails
 
 - **Determination:** Beim Anlegen wird der Status automatisch auf *Offen* gesetzt.
 - **Validation – Bearbeiter:** Ein Ticket kann nicht gespeichert werden, ohne dass ein Bearbeiter zugewiesen ist.
-- **Validation – Fälligkeitsdatum:** Das Fälligkeitsdatum muss in der Zukunft liegen.
-- **Early Numbering:** Die TicketID wird serverseitig unter Berücksichtigung sowohl der aktiven als auch der Draft-Tabelle eindeutig vergeben.
+- **Validation – Fälligkeitsdatum:** Das Fälligkeitsdatum muss heute oder später liegen.
+- **Early Numbering** vergibt die TicketID bereits beim Anlegen des Entwurfs über den internen SAP-Nummernkreis `ZNOVATKT/01` (`10000–99999`, kein automatischer Wiederanlauf). RAP prüft die reservierte Nummer gegen aktive Tickets und Entwürfe des veröffentlichten BOs. Beim Speichern bleibt die Nummer erhalten. Die Pufferung kann zu Lücken führen.
+- **Ticket schließen** ist für aktive Tickets mit Status Offen, In Bearbeitung oder Gelöst verfügbar, sofern kein Bearbeitungsentwurf vorhanden ist. Instance Feature Control steuert die Verfügbarkeit in Fiori. Der Action-Handler prüft dieselben Bedingungen serverseitig.
 
-## Features
+## Fiori-Vorschau und Teststand
 
-✔ Draft Handling
+Die Liste zeigt Ticketnummer, Betreff, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit. Die sechs Standardfilter sind Ticketnummer, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit. Die Objektseite gliedert sich in **Ticketdaten**, **Zuständigkeit**, **Beschreibung** und **Technische Informationen**.
 
-✔ Early Numbering
+Mit `sap-ui-language=DE` verwendet die Vorschau deutsche SAP-Standardaktionen und Datumsformate. Kategoriebezeichnungen wie „Change Request“ stammen aus den Referenzdaten. Neue Ticketnummern erscheinen fünfstellig. Bestehende Nummern wie `20` und `3030` behalten ihre bisherige Anzeige.
 
-✔ Determinations
-
-✔ Validations
-
-✔ Actions
-
-✔ Composition (1:n Beziehungen) – Ticketverlauf
-
-✔ Value Helps
-
-✔ Search
-
-✔ Filter
-
-✔ OData V4
-
-✔ Fiori Elements
-
-✔ Metadata Extensions
+In Mandant 100 wurden Liste, Suche, Filter, Wertehilfen und der Ticket-Lifecycle in Fiori geprüft. Zwei gleichzeitig offene Entwürfe derselben SAP-Anmeldung erhielten automatisch `10000` und `10010`. Ein Lauf mit zwei getrennten SAP-Benutzern und ein Test bei erschöpftem Nummernkreis stehen aus. Das Intervall wird pro Mandant eingerichtet. Ergebnisse und Einrichtungshinweise stehen im [Fiori-Testprotokoll](FIORI_TEST_RESULTS.md).
 
 ## Nächste Ausbauschritte
 
@@ -111,15 +100,19 @@ notes/                      Technische Notizen zu Implementierungsdetails
 
 ⬜ Notification Handling
 
+⬜ Ticketverlauf
+
 ## Screenshots
 
+Die Screenshots zeigen frühere Stände der Vorschau.
+
 ### Ticketübersicht
-Alle Tickets mit Klartext-Anzeige für Priorität, Status und Kategorie, inklusive vollständiger Filterleiste.
+Alle Tickets mit Klartext-Anzeige für Priorität, Status und Kategorie, mit Filterleiste.
 
 ![Ticketliste](11_screenshots/01_ticket_list.png)
 
 ### Ticket-Detailansicht
-Einzelansicht eines Tickets mit automatisch vergebener ID und allen Stammdaten.
+Einzelansicht mit Ticketnummer und Ticketdaten.
 
 ![Ticket Detail](11_screenshots/03_ticket_detail.png)
 
@@ -133,14 +126,14 @@ Serverseitige Validierung verhindert das Speichern, solange Pflichtfelder nicht 
 
 ![Validation](11_screenshots/05_validation_error.png)
 
-### Action: Ticket schliessen
-Über eine benutzerdefinierte Action kann ein Ticket direkt aus der Objektansicht geschlossen werden – der Status wird automatisch auf "Geschlossen" gesetzt.
+### Aktion „Ticket schließen“
+Die Aktion setzt den Status eines zulässigen Tickets auf „Geschlossen“.
 
 ![Ticket schliessen](11_screenshots/06_ticket_close_action.png)
 
 ### Ticketbeschreibung
 
-Die Ticketbeschreibung ist als eigener Kommunikationsbereich implementiert. Das Anliegen kann mehrzeilig erfasst werden und bildet den ersten Eintrag der späteren Ticketkommunikation. Weitere Nachrichten können im Verlauf ergänzt werden.
+Das Anliegen kann im Abschnitt „Beschreibung“ mehrzeilig erfasst werden.
 
 ![Custom Ticketbeschreibung](11_screenshots/07_custom_description_section.png)
 
@@ -151,4 +144,3 @@ SAP Solution Consultant Technology
 SAP Certified ABAP Cloud & CPI Integration Developer
 
 [LinkedIn](https://www.linkedin.com/in/ricardo-varesse-noubissi-simo-340319172/)
-  
