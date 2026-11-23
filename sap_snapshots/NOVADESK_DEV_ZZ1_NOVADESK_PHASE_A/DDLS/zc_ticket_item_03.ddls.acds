@@ -19,8 +19,11 @@ define root view entity ZC_TICKET_ITEM_03
   @Search.defaultSearchElement: true
   RequesterID,
   AssignedTo,
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_PRIO_VH_03', element: 'Priority' } }]
   Priority,
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_STATUS_VH_03', element: 'Status' } }]
   Status,
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_CATEG_VH_03', element: 'Category' } }]
   Category,
   @Search.defaultSearchElement: true
   Description,
