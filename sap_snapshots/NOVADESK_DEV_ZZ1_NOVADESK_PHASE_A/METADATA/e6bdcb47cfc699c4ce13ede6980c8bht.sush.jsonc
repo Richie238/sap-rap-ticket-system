@@ -1,0 +1,22 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "R3TR G4BA ZUI_TICKET_ITEM_03_O4",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "name": "E6BDCB47CFC699C4CE13EDE6980C8B",
+    "type": "HT",
+    "applicationName": "ZUI_TICKET_ITEM_03_O4",
+    "applicationType": "G4BA",
+    "maintenanceMode": "manual"
+  },
+  "authorizationObjects": [
+    {
+      "authObjectName": "S_START",
+      "authObjectText": "Start Authorization Check for TADIR Objects",
+      "maintenanceStatus": "noDefault"
+    }
+  ]
+}

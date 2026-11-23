@@ -1,0 +1,22 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Service Binding for ZUI_TICKET_ITEM_03_O4",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "bindingType": "ODATA V4",
+  "bindingTypeCategory": "ui",
+  "services": [
+    {
+      "name": "ZUI_TICKET_ITEM_03_O4",
+      "versions": [
+        {
+          "serviceVersion": "1.0.0",
+          "serviceBuildVersion": "",
+          "serviceDefinition": "ZUI_TICKET_ITEM_03_O4"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+managed implementation in class ZBP_R_TICKET_ITEM_03 unique;
+strict ( 2 );
+with draft;
+extensible;
+define behavior for ZR_TICKET_ITEM_03000 alias ZrTicketItem03000
+persistent table ZTICKET_ITEM_03
+extensible
+draft table ZTCKT_ITM_0000_D
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+authorization master( global )
+{
+  field ( mandatory : create )
+   TicketID;
+
+  field ( readonly )
+   CreatedBy,
+   CreatedAt,
+   LastChangedBy,
+   LocalLastChangedAt,
+   LastChangedAt;
+
+  field ( readonly : update )
+   TicketID;
+
+
+  create;
+  update;
+  delete;
+
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Edit;
+  draft action Resume;
+  draft determine action Prepare;
+
+  mapping for ZTICKET_ITEM_03 corresponding extensible
+  {
+    TicketID = TICKET_ID;
+    Subject = SUBJECT;
+    RequesterID = REQUESTER_ID;
+    AssignedTo = ASSIGNED_TO;
+    Priority = PRIORITY;
+    Status = STATUS;
+    Category = CATEGORY;
+    Description = DESCRIPTION;
+    DueDate = DUE_DATE;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
+    LastChangedBy = LAST_CHANGED_BY;
+    LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+    LastChangedAt = LAST_CHANGED_AT;
+  }
+
+}
