@@ -86,7 +86,7 @@ annotate view ZC_TICKET_ITEM_03 with
   @UI.identification: [ {
     position: 60 , 
     label: 'Status'
-  } ]
+  }, { position: 70, type: #FOR_ACTION, dataAction: 'closeTicket', label: 'Ticket schließen' } ]
   @UI.lineItem: [ {
     position: 60 , 
     label: 'Status'

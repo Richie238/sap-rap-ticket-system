@@ -12,6 +12,8 @@ CLASS LHC_ZR_TICKET_ITEM_03000 DEFINITION INHERITING FROM CL_ABAP_BEHAVIOR_HANDL
       IMPORTING keys FOR ZrTicketItem03000~validateAssignedTo.
     METHODS validateDueDate FOR VALIDATE ON SAVE
       IMPORTING keys FOR ZrTicketItem03000~validateDueDate.
+    METHODS closeTicket FOR MODIFY
+      IMPORTING keys FOR ACTION ZrTicketItem03000~closeTicket RESULT result.
 ENDCLASS.
 
 CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
@@ -80,5 +82,25 @@ CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
         ) TO reported-ZrTicketItem03000.
       ENDIF.
     ENDLOOP.
+  ENDMETHOD.
+
+  METHOD closeTicket.
+    CONSTANTS status_closed TYPE zticket_item_03-status VALUE 'G'.
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY ZrTicketItem03000
+        UPDATE FIELDS ( Status )
+        WITH VALUE #( FOR key IN keys
+          ( %tky = key-%tky Status = status_closed ) )
+      FAILED failed
+      REPORTED reported.
+
+    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY ZrTicketItem03000
+        ALL FIELDS WITH CORRESPONDING #( keys )
+      RESULT DATA(tickets).
+
+    result = VALUE #( FOR ticket IN tickets WHERE ( Status = status_closed )
+      ( %tky = ticket-%tky %param = ticket ) ).
   ENDMETHOD.
 ENDCLASS.

@@ -10,6 +10,7 @@ use etag
   use create;
   use update;
   use delete;
+  use action closeTicket;
 
   use action Edit;
   use action Activate;

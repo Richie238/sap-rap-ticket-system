@@ -28,6 +28,8 @@ authorization master( global )
   update;
   delete;
 
+  action ( authorization: update ) closeTicket result [1] $self;
+
   determination setStatusToOpen on modify { create; }
 
   draft action Activate optimized;
