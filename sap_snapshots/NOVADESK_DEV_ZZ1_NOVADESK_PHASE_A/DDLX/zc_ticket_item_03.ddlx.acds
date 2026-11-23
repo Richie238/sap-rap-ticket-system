@@ -12,14 +12,14 @@ annotate view ZC_TICKET_ITEM_03 with
     position: 10 , 
     type: #IDENTIFICATION_REFERENCE
   } ]
-  @EndUserText.label: 'TicketID'
+  @EndUserText.label: 'Ticket Number'
   @UI.identification: [ {
     position: 10 , 
-    label: 'TicketID'
+    label: 'Ticket Number'
   } ]
   @UI.lineItem: [ {
     position: 10 , 
-    label: 'TicketID'
+    label: 'Ticket Number'
   } ]
   @UI.selectionField: [ {
     position: 10 
@@ -40,28 +40,28 @@ annotate view ZC_TICKET_ITEM_03 with
   } ]
   Subject;
   
-  @EndUserText.label: 'RequesterID'
+  @EndUserText.label: 'Requester'
   @UI.identification: [ {
     position: 30 , 
-    label: 'RequesterID'
+    label: 'Requester'
   } ]
   @UI.lineItem: [ {
     position: 30 , 
-    label: 'RequesterID'
+    label: 'Requester'
   } ]
   @UI.selectionField: [ {
     position: 30 
   } ]
   RequesterID;
   
-  @EndUserText.label: 'AssignedTo'
+  @EndUserText.label: 'Assigned To'
   @UI.identification: [ {
     position: 40 , 
-    label: 'AssignedTo'
+    label: 'Assigned To'
   } ]
   @UI.lineItem: [ {
     position: 40 , 
-    label: 'AssignedTo'
+    label: 'Assigned To'
   } ]
   @UI.selectionField: [ {
     position: 40 
@@ -124,14 +124,14 @@ annotate view ZC_TICKET_ITEM_03 with
   } ]
   Description;
   
-  @EndUserText.label: 'DueDate'
+  @EndUserText.label: 'Due Date'
   @UI.identification: [ {
     position: 90 , 
-    label: 'DueDate'
+    label: 'Due Date'
   } ]
   @UI.lineItem: [ {
     position: 90 , 
-    label: 'DueDate'
+    label: 'Due Date'
   } ]
   @UI.selectionField: [ {
     position: 90 
