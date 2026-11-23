@@ -19,12 +19,18 @@ define root view entity ZC_TICKET_ITEM_03
   @Search.defaultSearchElement: true
   RequesterID,
   AssignedTo,
+  @ObjectModel.text.element: [ 'PriorityText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_PRIO_VH_03', element: 'Priority' } }]
   Priority,
+  _Priority.PriorityText as PriorityText,
+  @ObjectModel.text.element: [ 'StatusText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_STATUS_VH_03', element: 'Status' } }]
   Status,
+  _Status.StatusText as StatusText,
+  @ObjectModel.text.element: [ 'CategoryText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_CATEG_VH_03', element: 'Category' } }]
   Category,
+  _Category.CategoryText as CategoryText,
   @Search.defaultSearchElement: true
   Description,
   DueDate,

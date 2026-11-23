@@ -4,6 +4,9 @@
 @EndUserText.label: '###GENERATED Core Data Service Entity'
 define root view entity ZR_TICKET_ITEM_03000
   as select from ZTICKET_ITEM_03
+  association [0..1] to ZI_TICKET_PRIO_VH_03 as _Priority on $projection.Priority = _Priority.Priority
+  association [0..1] to ZI_TICKET_STATUS_VH_03 as _Status on $projection.Status = _Status.Status
+  association [0..1] to ZI_TICKET_CATEG_VH_03 as _Category on $projection.Category = _Category.Category
 {
   key ticket_id as TicketID,
   subject as Subject,
@@ -23,5 +26,8 @@ define root view entity ZR_TICKET_ITEM_03000
   @Semantics.systemDateTime.localInstanceLastChangedAt: true
   local_last_changed_at as LocalLastChangedAt,
   @Semantics.systemDateTime.lastChangedAt: true
-  last_changed_at as LastChangedAt
+  last_changed_at as LastChangedAt,
+  _Priority,
+  _Status,
+  _Category
 }
