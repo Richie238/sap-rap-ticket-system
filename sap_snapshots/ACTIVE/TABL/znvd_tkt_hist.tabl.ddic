@@ -1,0 +1,20 @@
+@EndUserText.label : 'NovaDesk Ticketverlauf'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_tkt_hist {
+
+  key client      : abap.clnt not null;
+  key event_uuid  : abap.raw(16) not null;
+  ticket_id       : abap.numc(8) not null;
+  change_uuid     : abap.raw(16) not null;
+  event_type      : abap.char(32) not null;
+  field_name      : abap.char(30);
+  old_value       : abap.char(255);
+  new_value       : abap.char(255);
+  attachment_uuid : abap.raw(16);
+  changed_by      : abp_creation_user not null;
+  changed_at      : abp_creation_tstmpl not null;
+
+}

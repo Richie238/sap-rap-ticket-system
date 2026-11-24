@@ -14,6 +14,7 @@ annotate view ZC_TICKET_ITEM_03 with
     { id: 'Responsibility', label: 'Zuständigkeit', position: 20, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Responsibility' },
     { id: 'TicketDescription', label: 'Beschreibung', position: 30, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TicketDescription' },
     { id: 'Attachments', label: 'Anhänge', position: 35, type: #LINEITEM_REFERENCE, targetElement: '_Attachments' },
+    { id: 'TicketHistory', label: 'Ticketverlauf', position: 38, type: #PRESENTATIONVARIANT_REFERENCE, targetElement: '_History', targetQualifier: 'TicketHistory' },
     { id: 'TechnicalInformation', label: 'Technische Informationen', position: 40, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TechnicalInformation' }
   ]
   @EndUserText.label: 'Ticketnummer'

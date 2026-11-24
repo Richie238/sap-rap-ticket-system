@@ -2,6 +2,35 @@
 
 Die Ergebnisse sind nach dem jeweiligen SAP-Stand dokumentiert. Die Abschnitte zur UX Phase 1, zur ursprünglichen Close-Aktion und zur Nummernvergabe sind historische Testprotokolle. Die dort beschriebene direkte Statusbearbeitung wurde durch die Workflow-Aktionen ersetzt.
 
+## Abschlussabnahme Ticketverlauf am 24. November 2026
+
+Getestet in `NOVADESK_DEV`, Mandant 100, mit Testticket `00010006`. Verwendet wurden die Fiori-Elements-Vorschau des veröffentlichten OData-V4-Bindings `ZUI_TICKET_ITEM_03_O4`, ein direkter OData-Aufruf, das ADT SQL Notebook und ABAP Unit über ADT MCP.
+
+Für die Abnahme gilt der aus SAP gelesene [aktive Quellstand](sap_snapshots/ACTIVE/). Der [Architekturabschnitt](README.md#ticketverlauf) beschreibt die Persistenz im Additional Saver und die Lesefreigabe über die Ticket-DCL.
+
+| Test | Ergebnis | Beobachtung |
+| --- | --- | --- |
+| Anhang hinzufügen | **Bestanden** | PDF im neuen Ticketentwurf hochgeladen. Vor dem Speichern war der Verlauf leer. Nach regulärer Aktivierung erschien genau einmal „Anhang hinzugefügt“ mit `verlauf.pdf` als Neuwert. |
+| Dateiname ändern | **Bestanden** | Nach Speichern erschien genau einmal „Anhang geändert“ mit `verlauf.pdf` als Altwert und `umbenannt.pdf` als Neuwert. |
+| Datei bei gleichem Namen ersetzen | **Bestanden** | PDF mit abweichendem SHA-256 und unverändertem Namen `umbenannt.pdf` hochgeladen. Genau ein Eintrag „Anhang ersetzt“ mit demselben Namen in beiden Wertspalten. |
+| Anhang löschen | **Bestanden** | Nach Speichern war die Anhangsliste leer. Genau ein Eintrag „Anhang gelöscht“ mit `umbenannt.pdf` als Altwert erschien oben. |
+| Draft-Regression mit regulärem Activate | **Bestanden** | Neuanlage und Bearbeitung wurden aktiviert. Nach Neuladen der Fiori-Seite war die ungespeicherte Umbenennung noch im Entwurf sichtbar. Verwerfen stellte den aktiven Dateinamen wieder her. Verwerfen und anschließendes Speichern ohne Änderungen ließen die Zahl der Verlaufseinträge bei vier. Der bestehende ABAP-Test bestätigte zusätzlich, dass ein ungültiger Dateientwurf bei Activate abgelehnt wird. |
+| Physischer Erhalt und Zugriff nach Ticketlöschung | **Bestanden** | Vor dem Löschen lieferte das direkte History-Entity-Set fünf Zeilen. Danach lieferte derselbe Filter `value: []`. Der Abruf über eine zuvor ausgegebene Ereignis-UUID lieferte in den Fehlerdetails „Resource not found“. Der direkte SQL-Zugriff auf `ZNVD_TKT_HIST` fand weiterhin sechs Zeilen, je eine pro Attachment-Ereignis sowie `TICKET_CREATED` und `TICKET_DELETED`. |
+| Expliziter RAP-Rollback vor dem Speichern | **Bestanden** | In einem temporären isolierten ABAP-Test war eine aktive Attachment-Umbenennung im RAP-Puffer sichtbar. Nach `ROLLBACK ENTITIES` blieben der gespeicherte Dateiname und die Anzahl der Verlaufseinträge gleich. |
+| Bestehende ABAP-Regressionstests | **Bestanden** | Alle fünf Tests im Behavior Pool bestanden. |
+
+**Fehlgeschlagen:** Kein funktionaler Abnahmefall. Die Schlüsselabfrage auf ein nach Ticketlöschung ausgeblendetes Ereignis erhält vom Gateway eine generische Provider-Fehlermeldung mit dem Detail „Resource not found“ und ohne Verlaufsdaten.
+
+### Backlog – nicht getestet
+
+| Test | Technische Voraussetzung und Abnahmekriterium |
+| --- | --- |
+| Berechtigungsprüfung mit zweiter Identität | ADT MCP hatte nur die bestehende NovaDesk-Anmeldung. Die aktive Ticket-DCL enthält `where TRUE` und kann deshalb innerhalb derselben Servicerolle keine unterschiedliche Sichtbarkeit je Ticket erzeugen. Sobald eine zweite Testidentität mit passender Vergleichsrolle und für den instanzbezogenen Test eine Ticket-DCL mit unterschiedlichen Sichtbarkeiten zur Verfügung stehen, Ticketliste, `_History`, direktes History-Entity-Set und Zugriff per Ereignis-UUID vergleichen. |
+| Erzwungener Fehler im späten RAP-Save | Für den bereits aktiven Saver steht kein vorhandener, isolierter Fehlerauslöser für das History-`INSERT` zur Verfügung. Den Test in einer isolierten Umgebung mit kontrolliertem Fehler beim Schreiben der Historie ausführen. Danach prüfen, dass Ticket- oder Attachment-Änderung und sämtliche zugehörigen Verlaufszeilen gemeinsam zurückgerollt wurden. |
+| Mehrere Workflow-Aktionen in derselben LUW | Die bisherigen Fiori-Tests speicherten jede Aktion separat. In einem gezielten RAP-Test mehrere zulässige Übergänge desselben Tickets vor einem gemeinsamen `COMMIT ENTITIES` ausführen. Fachliche Reihenfolge, Alt- und Neuwerte sowie die Zuordnung der Ereignisse zum gemeinsamen Speichervorgang prüfen. |
+
+Der temporäre Rollback-Test wurde nach der Ausführung entfernt und das ursprüngliche Test-Include wieder aktiviert. Fachlicher Code und Fiori-Metadaten wurden für diese Abnahme nicht geändert.
+
 ## Fiori-Abnahme für UX Phase 1 am 23. November 2026
 
 Getestet in Chrome in der SAP Fiori Elements App Preview für `ZC_TICKET_ITEM_03` am veröffentlichten OData-V4-UI-Binding `ZUI_TICKET_ITEM_03_O4`, `NOVADESK_DEV`, Mandant 100. Getesteter Annotationsstand auf GitHub ist `26c1c0f89233a9e799729320b8fb35013d8238fd`.

@@ -1,0 +1,6 @@
+@EndUserText.label: 'Sichtbarkeit NovaDesk Ticketverlauf'
+@MappingRole: true
+define role ZC_NVD_TKT_HIST {
+  grant select on ZC_NVD_TKT_HIST
+    where inheriting conditions from entity ZI_NVD_TKT_HIST;
+}

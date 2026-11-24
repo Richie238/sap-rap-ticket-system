@@ -1,3 +1,20 @@
+CLASS lcl_ticket_history DEFINITION FINAL.
+  PUBLIC SECTION.
+    TYPES: BEGIN OF attachment_before,
+             attachment_uuid TYPE znvd_tkt_att-attachment_uuid,
+             ticket_id       TYPE znvd_tkt_att-ticket_id,
+             file_name       TYPE znvd_tkt_att-file_name,
+             mime_type       TYPE znvd_tkt_att-mime_type,
+             file_content    TYPE znvd_tkt_att-file_content,
+           END OF attachment_before.
+    CLASS-DATA attachments_before TYPE HASHED TABLE OF attachment_before
+      WITH UNIQUE KEY attachment_uuid
+      WITH NON-UNIQUE SORTED KEY by_ticket COMPONENTS ticket_id.
+    CLASS-DATA before_rows TYPE HASHED TABLE OF zticket_item_03 WITH UNIQUE KEY ticket_id.
+    CLASS-DATA transitions TYPE STANDARD TABLE OF znvd_tkt_hist
+      WITH EMPTY KEY WITH NON-UNIQUE SORTED KEY by_ticket COMPONENTS ticket_id.
+ENDCLASS.
+
 CLASS lcl_attachment_policy DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES ticket_keys TYPE TABLE FOR READ IMPORT ZR_TICKET_ITEM_03000.
@@ -101,6 +118,10 @@ CLASS LHC_ZR_TICKET_ITEM_03000 DEFINITION INHERITING FROM CL_ABAP_BEHAVIOR_HANDL
       EXPORTING action_failed TYPE failed_response
                 action_reported TYPE reported_response
                 updated_tickets TYPE ticket_read_result.
+    METHODS captureTicketAttachments FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZrTicketItem03000~captureTicketAttachments.
+    METHODS captureHistoryBefore FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZrTicketItem03000~captureHistoryBefore.
     METHODS validateDraftStatus FOR VALIDATE ON SAVE
       IMPORTING keys FOR ZrTicketItem03000~validateDraftStatus.
 
@@ -298,6 +319,35 @@ CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
     ENDCASE.
   ENDMETHOD.
 
+  METHOD captureTicketAttachments.
+    IF keys IS INITIAL.
+      RETURN.
+    ENDIF.
+    DATA persisted TYPE STANDARD TABLE OF lcl_ticket_history=>attachment_before WITH EMPTY KEY.
+    SELECT FROM znvd_tkt_att
+      FIELDS attachment_uuid, ticket_id, file_name
+      FOR ALL ENTRIES IN @keys WHERE ticket_id = @keys-TicketID
+      INTO CORRESPONDING FIELDS OF TABLE @persisted.
+    LOOP AT persisted INTO DATA(attachment).
+      INSERT attachment INTO TABLE lcl_ticket_history=>attachments_before.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD captureHistoryBefore.
+    IF keys IS INITIAL.
+      RETURN.
+    ENDIF.
+    DATA persisted TYPE STANDARD TABLE OF zticket_item_03 WITH EMPTY KEY.
+    SELECT FROM zticket_item_03
+      FIELDS ticket_id, subject, requester_id, assigned_to, priority, status, category, due_date, description
+      FOR ALL ENTRIES IN @keys WHERE ticket_id = @keys-TicketID
+      INTO CORRESPONDING FIELDS OF TABLE @persisted.
+    LOOP AT keys INTO DATA(key).
+      DELETE TABLE lcl_ticket_history=>before_rows WITH TABLE KEY ticket_id = key-TicketID.
+    ENDLOOP.
+    INSERT LINES OF persisted INTO TABLE lcl_ticket_history=>before_rows.
+  ENDMETHOD.
+
   METHOD validateDraftStatus.
     DATA draft_keys TYPE ticket_read_keys.
     draft_keys = CORRESPONDING #( keys ).
@@ -486,6 +536,19 @@ CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
       LOOP AT tickets_to_update INTO DATA(update_key).
         IF NOT line_exists( update_failed-ZrTicketItem03000[ %tky = update_key-%tky ] ).
           APPEND CORRESPONDING #( update_key ) TO successful_keys.
+          DATA(transition) = VALUE znvd_tkt_hist(
+            ticket_id = update_key-TicketID
+            event_type = SWITCH #( action
+              WHEN startwork_action THEN 'startWork'
+              WHEN markresolved_action THEN 'markResolved'
+              WHEN reopenticket_action THEN 'reopenTicket'
+              WHEN closeticket_action THEN 'closeTicket' )
+            field_name = 'Status'
+            old_value = tickets[ %tky = update_key-%tky ]-Status
+            new_value = update_key-Status
+            changed_by = cl_abap_context_info=>get_user_technical_name( ) ).
+          GET TIME STAMP FIELD transition-changed_at.
+          APPEND transition TO lcl_ticket_history=>transitions.
         ENDIF.
       ENDLOOP.
 
@@ -561,6 +624,8 @@ CLASS lhc_attachment DEFINITION INHERITING FROM cl_abap_behavior_handler.
     TYPES attachment_keys TYPE TABLE FOR READ IMPORT ZR_NVD_TKT_ATT.
     TYPES attachment_data TYPE TABLE FOR READ RESULT ZR_NVD_TKT_ATT.
 
+    METHODS captureAttachmentBefore FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Attachment~captureAttachmentBefore.
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR Attachment RESULT result.
     METHODS precheck_update FOR PRECHECK
@@ -633,6 +698,25 @@ CLASS lhc_attachment IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD captureAttachmentBefore.
+    IF keys IS INITIAL.
+      RETURN.
+    ENDIF.
+    DATA persisted TYPE STANDARD TABLE OF lcl_ticket_history=>attachment_before WITH EMPTY KEY.
+    DATA attachment_ids TYPE RANGE OF znvd_tkt_att-attachment_uuid.
+    attachment_ids = VALUE #( FOR key IN keys
+      ( sign = 'I' option = 'EQ' low = key-AttachmentUUID ) ).
+    SELECT FROM znvd_tkt_att
+      FIELDS attachment_uuid, ticket_id, file_name, mime_type, file_content
+      WHERE attachment_uuid IN @attachment_ids
+      INTO CORRESPONDING FIELDS OF TABLE @persisted.
+    LOOP AT persisted INTO DATA(attachment).
+      DELETE TABLE lcl_ticket_history=>attachments_before
+        WITH TABLE KEY attachment_uuid = attachment-attachment_uuid.
+      INSERT attachment INTO TABLE lcl_ticket_history=>attachments_before.
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD validateFile.
     READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
       ENTITY Attachment FIELDS ( TicketID FileName MimeType FileContent )
@@ -695,5 +779,216 @@ CLASS lhc_attachment IMPLEMENTATION.
     IF signature_matches = abap_false.
       error = 'Die Dateisignatur stimmt nicht mit dem angegebenen Dateityp überein.'.
     ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS lsc_ticket_history DEFINITION INHERITING FROM cl_abap_behavior_saver_failed.
+  PROTECTED SECTION.
+    METHODS save_modified REDEFINITION.
+    METHODS cleanup REDEFINITION.
+    METHODS cleanup_finalize REDEFINITION.
+  PRIVATE SECTION.
+    TYPES history_rows TYPE STANDARD TABLE OF znvd_tkt_hist WITH EMPTY KEY.
+    METHODS append_change
+      IMPORTING row TYPE znvd_tkt_hist
+                field_name TYPE znvd_tkt_hist-field_name
+                old_value TYPE znvd_tkt_hist-old_value
+                new_value TYPE znvd_tkt_hist-new_value
+      CHANGING rows TYPE history_rows.
+ENDCLASS.
+
+CLASS lsc_ticket_history IMPLEMENTATION.
+  METHOD append_change.
+    IF old_value = new_value.
+      RETURN.
+    ENDIF.
+    DATA(entry) = row.
+    entry-field_name = field_name.
+    IF field_name <> 'Description'.
+      entry-old_value = old_value.
+      entry-new_value = new_value.
+    ENDIF.
+    APPEND entry TO rows.
+  ENDMETHOD.
+
+  METHOD save_modified.
+    DATA rows TYPE history_rows.
+    DATA entry TYPE znvd_tkt_hist.
+    GET TIME STAMP FIELD entry-changed_at.
+    entry-changed_by = cl_abap_context_info=>get_user_technical_name( ).
+
+    LOOP AT create-ZrTicketItem03000 INTO DATA(created).
+      entry-ticket_id = created-TicketID.
+      entry-event_type = 'TICKET_CREATED'.
+      entry-new_value = created-Status.
+      entry-field_name = 'Status'.
+      APPEND entry TO rows.
+    ENDLOOP.
+
+    CLEAR: entry-new_value, entry-field_name.
+    LOOP AT delete-ZrTicketItem03000 INTO DATA(deleted).
+      entry-ticket_id = deleted-TicketID.
+      entry-event_type = 'TICKET_DELETED'.
+      APPEND entry TO rows.
+    ENDLOOP.
+
+    LOOP AT lcl_ticket_history=>transitions INTO DATA(transition).
+      IF line_exists( update-ZrTicketItem03000[ TicketID = transition-ticket_id ] )
+          OR line_exists( delete-ZrTicketItem03000[ TicketID = transition-ticket_id ] )
+          OR line_exists( create-ZrTicketItem03000[ TicketID = transition-ticket_id ] ).
+        APPEND transition TO rows.
+      ENDIF.
+    ENDLOOP.
+    LOOP AT update-ZrTicketItem03000 INTO DATA(updated).
+      IF updated-%control-Subject = if_abap_behv=>mk-off
+          AND updated-%control-RequesterID = if_abap_behv=>mk-off
+          AND updated-%control-AssignedTo = if_abap_behv=>mk-off
+          AND updated-%control-Priority = if_abap_behv=>mk-off
+          AND updated-%control-Status = if_abap_behv=>mk-off
+          AND updated-%control-Category = if_abap_behv=>mk-off
+          AND updated-%control-DueDate = if_abap_behv=>mk-off
+          AND updated-%control-Description = if_abap_behv=>mk-off.
+        CONTINUE.
+      ENDIF.
+      READ TABLE lcl_ticket_history=>before_rows INTO DATA(before)
+        WITH TABLE KEY ticket_id = updated-TicketID.
+      IF sy-subrc <> 0.
+        APPEND VALUE #( %key = updated-%key %fail-cause = if_abap_behv=>cause-unspecific )
+          TO failed-ZrTicketItem03000.
+        APPEND VALUE #( %key = updated-%key %msg = new_message_with_text(
+          severity = if_abap_behv_message=>severity-error
+          text = 'Der Vorwert für den Ticketverlauf fehlt. Die Änderung wurde nicht gespeichert.' ) )
+          TO reported-ZrTicketItem03000.
+        CONTINUE.
+      ENDIF.
+      entry-ticket_id = updated-TicketID.
+      entry-event_type = 'FIELD_CHANGED'.
+      append_change( EXPORTING row = entry field_name = 'Subject'
+                               old_value = CONV #( before-subject ) new_value = CONV #( updated-Subject )
+                     CHANGING rows = rows ).
+      append_change( EXPORTING row = entry field_name = 'RequesterID'
+                               old_value = CONV #( before-requester_id ) new_value = CONV #( updated-RequesterID )
+                     CHANGING rows = rows ).
+      append_change( EXPORTING row = entry field_name = 'AssignedTo'
+                               old_value = CONV #( before-assigned_to ) new_value = CONV #( updated-AssignedTo )
+                     CHANGING rows = rows ).
+      append_change( EXPORTING row = entry field_name = 'Priority'
+                               old_value = CONV #( before-priority ) new_value = CONV #( updated-Priority )
+                     CHANGING rows = rows ).
+      IF NOT line_exists( lcl_ticket_history=>transitions[
+          KEY by_ticket ticket_id = updated-TicketID ] ).
+        append_change( EXPORTING row = entry field_name = 'Status'
+                                 old_value = CONV #( before-status ) new_value = CONV #( updated-Status )
+                       CHANGING rows = rows ).
+      ENDIF.
+      append_change( EXPORTING row = entry field_name = 'Category'
+                               old_value = CONV #( before-category ) new_value = CONV #( updated-Category )
+                     CHANGING rows = rows ).
+      append_change( EXPORTING row = entry field_name = 'DueDate'
+                               old_value = CONV #( before-due_date ) new_value = CONV #( updated-DueDate )
+                     CHANGING rows = rows ).
+      append_change( EXPORTING row = entry field_name = 'Description'
+                               old_value = CONV #( before-description ) new_value = CONV #( updated-Description )
+                     CHANGING rows = rows ).
+    ENDLOOP.
+    CLEAR: entry-old_value, entry-new_value.
+    entry-field_name = 'FileName'.
+    LOOP AT create-Attachment INTO DATA(added_attachment).
+      entry-ticket_id = added_attachment-TicketID.
+      entry-attachment_uuid = added_attachment-AttachmentUUID.
+      entry-event_type = 'ATTACHMENT_ADDED'.
+      entry-new_value = added_attachment-FileName.
+      APPEND entry TO rows.
+    ENDLOOP.
+
+    LOOP AT update-Attachment INTO DATA(updated_attachment).
+      READ TABLE lcl_ticket_history=>attachments_before
+        WITH TABLE KEY attachment_uuid = updated_attachment-AttachmentUUID
+        ASSIGNING FIELD-SYMBOL(<attachment_before>).
+      IF sy-subrc <> 0.
+        APPEND VALUE #( %key = updated_attachment-%key %fail-cause = if_abap_behv=>cause-unspecific )
+          TO failed-Attachment.
+        APPEND VALUE #( %key = updated_attachment-%key %msg = new_message_with_text(
+          severity = if_abap_behv_message=>severity-error
+          text = 'Der Vorwert für den Attachment-Verlauf fehlt.' ) ) TO reported-Attachment.
+        CONTINUE.
+      ENDIF.
+
+      entry-ticket_id = <attachment_before>-ticket_id.
+      entry-attachment_uuid = updated_attachment-AttachmentUUID.
+      entry-event_type = 'ATTACHMENT_CHANGED'.
+      entry-field_name = 'FileName'.
+      entry-old_value = <attachment_before>-file_name.
+      entry-new_value = updated_attachment-FileName.
+      IF <attachment_before>-file_content <> updated_attachment-FileContent.
+        entry-event_type = 'ATTACHMENT_REPLACED'.
+      ELSEIF <attachment_before>-file_name = updated_attachment-FileName.
+        IF <attachment_before>-mime_type = updated_attachment-MimeType.
+          CONTINUE.
+        ENDIF.
+        entry-field_name = 'MimeType'.
+        entry-old_value = <attachment_before>-mime_type.
+        entry-new_value = updated_attachment-MimeType.
+      ENDIF.
+      APPEND entry TO rows.
+    ENDLOOP.
+
+    DATA deleted_attachment_ids TYPE HASHED TABLE OF znvd_tkt_att-attachment_uuid
+      WITH UNIQUE KEY table_line.
+    LOOP AT delete-Attachment INTO DATA(deleted_attachment).
+      INSERT deleted_attachment-AttachmentUUID INTO TABLE deleted_attachment_ids.
+    ENDLOOP.
+    LOOP AT delete-ZrTicketItem03000 INTO deleted.
+      LOOP AT lcl_ticket_history=>attachments_before ASSIGNING <attachment_before>
+          USING KEY by_ticket WHERE ticket_id = deleted-TicketID.
+        INSERT <attachment_before>-attachment_uuid INTO TABLE deleted_attachment_ids.
+      ENDLOOP.
+    ENDLOOP.
+    entry-event_type = 'ATTACHMENT_DELETED'.
+    entry-field_name = 'FileName'.
+    CLEAR entry-new_value.
+    LOOP AT deleted_attachment_ids INTO DATA(attachment_uuid).
+      READ TABLE lcl_ticket_history=>attachments_before
+        WITH TABLE KEY attachment_uuid = attachment_uuid ASSIGNING <attachment_before>.
+      IF sy-subrc = 0.
+        entry-ticket_id = <attachment_before>-ticket_id.
+        entry-attachment_uuid = attachment_uuid.
+        entry-old_value = <attachment_before>-file_name.
+        APPEND entry TO rows.
+      ENDIF.
+    ENDLOOP.
+
+    IF failed-ZrTicketItem03000 IS NOT INITIAL OR failed-Attachment IS NOT INITIAL OR rows IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        DATA(change_uuid) = cl_system_uuid=>create_uuid_x16_static( ).
+        LOOP AT rows ASSIGNING FIELD-SYMBOL(<entry>).
+          <entry>-change_uuid = change_uuid.
+          <entry>-event_uuid = cl_system_uuid=>create_uuid_x16_static( ).
+        ENDLOOP.
+        INSERT znvd_tkt_hist FROM TABLE @rows.
+      CATCH cx_uuid_error cx_sy_open_sql_db.
+        LOOP AT rows INTO DATA(failed_entry) GROUP BY failed_entry-ticket_id INTO DATA(ticket_id).
+          APPEND VALUE #( TicketID = ticket_id %fail-cause = if_abap_behv=>cause-unspecific )
+            TO failed-ZrTicketItem03000.
+          APPEND VALUE #( TicketID = ticket_id %msg = new_message_with_text(
+            severity = if_abap_behv_message=>severity-error
+            text = 'Der Ticketverlauf konnte nicht gespeichert werden. Die Änderung wurde zurückgerollt.' ) )
+            TO reported-ZrTicketItem03000.
+        ENDLOOP.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD cleanup.
+    CLEAR: lcl_ticket_history=>before_rows, lcl_ticket_history=>transitions,
+           lcl_ticket_history=>attachments_before.
+  ENDMETHOD.
+
+  METHOD cleanup_finalize.
+    CLEAR: lcl_ticket_history=>before_rows, lcl_ticket_history=>transitions,
+           lcl_ticket_history=>attachments_before.
   ENDMETHOD.
 ENDCLASS.

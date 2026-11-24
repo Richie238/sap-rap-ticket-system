@@ -12,6 +12,7 @@ define root view entity ZC_TICKET_ITEM_03
   provider contract TRANSACTIONAL_QUERY
   as projection on ZR_TICKET_ITEM_03000
   association [1..1] to ZR_TICKET_ITEM_03000 as _BaseEntity on $projection.TICKETID = _BaseEntity.TICKETID
+  association [0..*] to ZC_NVD_TKT_HIST as _History on $projection.TicketID = _History.TicketID
 {
   key TicketID,
   @Search.defaultSearchElement: true
@@ -55,5 +56,6 @@ define root view entity ZC_TICKET_ITEM_03
   }
   LastChangedAt,
   _BaseEntity,
+  _History,
   _Attachments : redirected to composition child ZC_NVD_TKT_ATT
 }

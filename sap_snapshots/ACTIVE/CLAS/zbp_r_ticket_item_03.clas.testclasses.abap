@@ -4,6 +4,7 @@ CLASS ltc_ticket_workflow DEFINITION FINAL FOR TESTING
     TYPES ticket_id_type TYPE zticket_item_03-ticket_id.
     CONSTANTS actions TYPE c LENGTH 4 VALUE 'SRWC'.
     CLASS-DATA cds_environment TYPE REF TO if_cds_test_environment.
+    CLASS-DATA sql_environment TYPE REF TO if_osql_test_environment.
     CLASS-METHODS class_setup.
     CLASS-METHODS class_teardown.
     METHODS teardown.
@@ -23,16 +24,23 @@ ENDCLASS.
 
 CLASS ltc_ticket_workflow IMPLEMENTATION.
   METHOD class_setup.
-    cds_environment = cl_cds_test_environment=>create( i_for_entity = 'ZR_TICKET_ITEM_03000' ).
+    cds_environment = cl_cds_test_environment=>create_for_multiple_cds( VALUE #(
+      ( i_for_entity = 'ZR_TICKET_ITEM_03000' )
+      ( i_for_entity = 'ZR_NVD_TKT_ATT' ) ) ).
     cds_environment->enable_double_redirection( ).
+    sql_environment = cl_osql_test_environment=>create( VALUE #(
+      ( 'ZNVD_TKT_HIST' ) ( 'ZTCKT_ITM_0000_D' ) ( 'ZNVD_TKT_ATT_D' ) ) ).
   ENDMETHOD.
 
   METHOD class_teardown.
+    sql_environment->destroy( ).
     cds_environment->destroy( ).
   ENDMETHOD.
 
   METHOD teardown.
     ROLLBACK ENTITIES.
+    sql_environment->clear_doubles( ).
+    cds_environment->clear_doubles( ).
   ENDMETHOD.
 
   METHOD create_ticket.
@@ -147,8 +155,10 @@ CLASS ltc_ticket_workflow IMPLEMENTATION.
 
   METHOD sibling_draft_restrictions.
     DATA(ticket_id) = create_ticket( if_abap_behv=>mk-off ).
+    COMMIT ENTITIES RESPONSE OF ZR_TICKET_ITEM_03000 FAILED DATA(save_failed).
+    cl_abap_unit_assert=>assert_initial( save_failed ).
     MODIFY ENTITIES OF ZR_TICKET_ITEM_03000
-      ENTITY ZrTicketItem03000 EXECUTE Edit FROM VALUE #( ( TicketID = ticket_id ) )
+      ENTITY ZrTicketItem03000 EXECUTE Edit FROM VALUE #( ( %cid = 'EDIT' TicketID = ticket_id ) )
       FAILED DATA(edit_failed).
     cl_abap_unit_assert=>assert_initial( edit_failed-ZrTicketItem03000 ).
 
@@ -169,8 +179,180 @@ CLASS ltc_ticket_workflow IMPLEMENTATION.
 
     MODIFY ENTITIES OF ZR_TICKET_ITEM_03000
       ENTITY ZrTicketItem03000 EXECUTE Activate
-      FROM VALUE #( ( TicketID = ticket_id ) )
+      FROM VALUE #( ( %cid = 'ACTIVATE' TicketID = ticket_id ) )
       FAILED DATA(activate_failed) REPORTED DATA(activate_reported) MAPPED DATA(activate_mapped).
     cl_abap_unit_assert=>assert_not_initial( activate_failed-ZrTicketItem03000 ).
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltc_attachment_history DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+  PRIVATE SECTION.
+    CONSTANTS ticket TYPE zticket_item_03-ticket_id VALUE '99991742'.
+    CONSTANTS subject TYPE zticket_item_03-subject VALUE 'NovaDesk Attachment History Integration 91742'.
+    CLASS-DATA cds_environment TYPE REF TO if_cds_test_environment.
+    CLASS-DATA sql_environment TYPE REF TO if_osql_test_environment.
+    CLASS-METHODS class_setup.
+    CLASS-METHODS class_teardown.
+    DATA attachment TYPE znvd_tkt_att-attachment_uuid.
+    METHODS teardown.
+    METHODS draft_lifecycle FOR TESTING.
+    METHODS save_changes.
+    METHODS add_file.
+    METHODS edit_draft.
+    METHODS activate_draft.
+    METHODS change_file IMPORTING filename TYPE znvd_tkt_att-file_name
+                                   content TYPE xstring.
+    METHODS assert_history IMPORTING event TYPE znvd_tkt_hist-event_type
+                                     old_name TYPE znvd_tkt_hist-old_value OPTIONAL
+                                     new_name TYPE znvd_tkt_hist-new_value OPTIONAL.
+    METHODS assert_count IMPORTING expected TYPE i.
+ENDCLASS.
+
+CLASS ltc_attachment_history IMPLEMENTATION.
+  METHOD save_changes.
+    COMMIT ENTITIES RESPONSE OF ZR_TICKET_ITEM_03000 FAILED DATA(failed) REPORTED DATA(reported).
+    DATA(rc) = sy-subrc.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_equals( act = rc exp = 0 ).
+  ENDMETHOD.
+
+  METHOD class_setup.
+    cds_environment = cl_cds_test_environment=>create_for_multiple_cds( VALUE #(
+      ( i_for_entity = 'ZR_TICKET_ITEM_03000' )
+      ( i_for_entity = 'ZR_NVD_TKT_ATT' ) ) ).
+    cds_environment->enable_double_redirection( ).
+    sql_environment = cl_osql_test_environment=>create( VALUE #(
+      ( 'ZNVD_TKT_HIST' ) ( 'ZTCKT_ITM_0000_D' ) ( 'ZNVD_TKT_ATT_D' ) ) ).
+  ENDMETHOD.
+
+  METHOD class_teardown.
+    sql_environment->destroy( ).
+    cds_environment->destroy( ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    ROLLBACK ENTITIES.
+  ENDMETHOD.
+
+  METHOD add_file.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000
+      ENTITY ZrTicketItem03000 CREATE BY \_Attachments FIELDS ( FileName MimeType FileContent )
+      WITH VALUE #( ( TicketID = ticket %is_draft = if_abap_behv=>mk-on
+        %target = VALUE #( ( %cid = 'ATT' %is_draft = if_abap_behv=>mk-on
+          FileName = 'probe.pdf' MimeType = 'application/pdf' FileContent = '255044462D41' ) ) ) )
+      MAPPED DATA(mapped) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    attachment = mapped-Attachment[ 1 ]-AttachmentUUID.
+    save_changes( ).
+  ENDMETHOD.
+
+  METHOD edit_draft.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Edit FROM VALUE #( ( %cid = 'EDIT' TicketID = ticket ) )
+      MAPPED DATA(mapped) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+  ENDMETHOD.
+
+  METHOD activate_draft.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Activate FROM VALUE #( ( %cid = 'ACTIVATE' TicketID = ticket ) )
+      MAPPED DATA(mapped) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+  ENDMETHOD.
+
+  METHOD change_file.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY Attachment
+      UPDATE FIELDS ( FileName FileContent )
+      WITH VALUE #( ( AttachmentUUID = attachment %is_draft = if_abap_behv=>mk-on
+                      FileName = filename FileContent = content ) ) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+  ENDMETHOD.
+
+  METHOD assert_history.
+    SELECT FROM znvd_tkt_hist FIELDS COUNT( * )
+      WHERE ticket_id = @ticket AND attachment_uuid = @attachment AND event_type = @event
+        AND old_value = @old_name AND new_value = @new_name
+      INTO @DATA(actual).
+    cl_abap_unit_assert=>assert_equals( act = actual exp = 1 msg = event ).
+  ENDMETHOD.
+
+  METHOD assert_count.
+    SELECT FROM znvd_tkt_hist FIELDS COUNT( * ) WHERE ticket_id = @ticket
+      AND event_type LIKE 'ATTACHMENT%' INTO @DATA(actual).
+    cl_abap_unit_assert=>assert_equals( act = actual exp = expected ).
+  ENDMETHOD.
+
+  METHOD draft_lifecycle.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE ENTITY ZrTicketItem03000
+      CREATE FIELDS ( TicketID Subject AssignedTo DueDate )
+      WITH VALUE #( ( %cid = 'HIST' %is_draft = if_abap_behv=>mk-on TicketID = ticket
+                      Subject = subject AssignedTo = 'IT'
+                      DueDate = cl_abap_context_info=>get_system_date( ) ) ) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+    add_file( ).
+    assert_count( 0 ).
+    activate_draft( ).
+    assert_history( event = 'ATTACHMENT_ADDED' new_name = 'probe.pdf' ).
+
+    edit_draft( ).
+    change_file( filename = 'renamed.pdf' content = '255044462D41' ).
+    activate_draft( ).
+    assert_history( event = 'ATTACHMENT_CHANGED' old_name = 'probe.pdf' new_name = 'renamed.pdf' ).
+
+    edit_draft( ).
+    change_file( filename = 'renamed.pdf' content = '255044462D42' ).
+    activate_draft( ).
+    assert_history( event = 'ATTACHMENT_REPLACED' old_name = 'renamed.pdf' new_name = 'renamed.pdf' ).
+
+    edit_draft( ).
+    change_file( filename = 'renamed.pdf' content = '255044462D42' ).
+    activate_draft( ).
+    assert_count( 3 ).
+
+    edit_draft( ).
+    change_file( filename = 'discard.pdf' content = '255044462D43' ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Discard FROM VALUE #( ( TicketID = ticket ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+    assert_count( 3 ).
+
+    edit_draft( ).
+    change_file( filename = 'invalid.pdf' content = '00' ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Activate FROM VALUE #( ( %cid = 'INVALID' TicketID = ticket ) )
+      MAPPED DATA(invalid_mapped) FAILED DATA(invalid_failed).
+    cl_abap_unit_assert=>assert_not_initial( invalid_failed ).
+    ROLLBACK ENTITIES.
+    assert_count( 3 ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Discard FROM VALUE #( ( TicketID = ticket ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+
+    edit_draft( ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY Attachment
+      DELETE FROM VALUE #( ( AttachmentUUID = attachment %is_draft = if_abap_behv=>mk-on ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+    activate_draft( ).
+    assert_history( event = 'ATTACHMENT_DELETED' old_name = 'renamed.pdf' ).
+    assert_count( 4 ).
+
+    edit_draft( ).
+    add_file( ).
+    activate_draft( ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      DELETE FROM VALUE #( ( TicketID = ticket ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+    SELECT SINGLE FROM znvd_tkt_att FIELDS ticket_id WHERE attachment_uuid = @attachment INTO @DATA(existing).
+    cl_abap_unit_assert=>assert_initial( existing ).
+    assert_history( event = 'ATTACHMENT_DELETED' old_name = 'probe.pdf' ).
+    assert_count( 6 ).
   ENDMETHOD.
 ENDCLASS.

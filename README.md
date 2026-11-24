@@ -30,6 +30,10 @@ flowchart TD
   UI[Fiori Elements] --> Service[ZUI_TICKET_ITEM_03_O4]
   Service --> Ticket[ZC_TICKET_ITEM_03]
   Service --> Attach[ZC_NVD_TKT_ATT]
+  Ticket -->|_History| History[ZC_NVD_TKT_HIST]
+  History --> HistoryInterface[ZI_NVD_TKT_HIST]
+  HistoryInterface --> Audit[(ZNVD_TKT_HIST)]
+  Root -->|Additional Saver| Audit
   Ticket --> Root[ZR_TICKET_ITEM_03000]
   Attach --> Child[ZR_NVD_TKT_ATT]
   Root -->|_Attachments: 0..*| Child
@@ -45,9 +49,16 @@ flowchart TD
 | Ticketentwurf | `ZTCKT_ITM_0000_D`. Die alte Draft-Tabelle `ZTCKET_ITEM_03_D` existiert weiterhin. |
 | Anhang | `ZNVD_TKT_ATT` mit verwalteter RAW(16)-UUID, Ticketreferenz, Dateiname, MIME-Typ, Binärinhalt und Auditfeldern. |
 | Anhangsentwurf | `ZNVD_TKT_ATT_D`. Der Anhang hat einen lokalen ETag. Sperren und Änderungsberechtigungen sind vom Ticket abhängig. |
+| Ticketverlauf | `ZNVD_TKT_HIST` mit Ereignis-UUID, gemeinsamer Änderungs-UUID je Speichervorgang, Ticketnummer, optionaler Attachment-UUID, Ereignistyp, Feld, Alt- und Neuwert, Benutzer und Zeitstempel. |
 | Referenzdaten | `ZTICKET_CAT_03`, `ZTICKET_PRIO_03` und `ZTICKET_STATUS` versorgen die Wertehilfen. |
 
 RAP Early Numbering reserviert Ticketnummern aus `ZNOVATKT/01` im Bereich 10000–99999. Die Nummer steht beim Anlegen des Entwurfs fest und bleibt schreibgeschützt. SAP speichert sie im bestehenden achtstelligen Schlüssel. Nummernlücken sind durch Pufferung möglich. Das Intervall muss im jeweiligen Zielmandanten eingerichtet werden. Beim Speichern prüft RAP außerdem den Bearbeiter und die Fälligkeit.
+
+### Ticketverlauf
+
+Der Additional Saver in `ZBP_R_TICKET_ITEM_03` schreibt den Verlauf in derselben RAP-Transaktion wie Ticket und Anhänge. Vor der Speicherung erfasst RAP die aktiven Vorwerte. Beim Speichern entstehen Ereignisse für Ticketanlage, Ticketlöschung, Änderungen protokollierter Felder, Workflow-Übergänge sowie hinzugefügte, geänderte, ersetzte und gelöschte Anhänge. Der Saver vergleicht den Dateiinhalt nur im Speicher und erkennt dadurch auch einen Austausch bei identischem Dateinamen. Binärdaten und die Alt- und Neuwerte der Ticketbeschreibung werden in der Historie nicht abgelegt. Unverändertes Speichern und verworfene Entwürfe erzeugen keine zusätzlichen Einträge.
+
+`ZI_NVD_TKT_HIST` verknüpft den Verlauf beim Lesen mit dem aktiven Ticket. Beide History-Entitäten übernehmen per DCL die Leseregel des Ticket-BOs. Die gegenwärtige Ticket-DCL enthält innerhalb des berechtigten Servicezugriffs keine Einschränkung je Ticket. Nach einer Ticketlöschung bleiben die Ereignisse physisch erhalten. Die lesende OData-Navigation `_History` und das direkt exponierte History-Entity-Set geben sie dann nicht mehr aus. Die Fiori-Objektseite zeigt Ereignis, Feldname, Altwert, Neuwert, Benutzer und Zeitstempel in absteigender Zeitfolge. Technische UUIDs sind in Fiori ausgeblendet. Die Ereignis-UUID bleibt der technische OData-Schlüssel.
 
 ## Projektstruktur
 
@@ -62,6 +73,8 @@ RAP Early Numbering reserviert Ticketnummern aus `ZNOVATKT/01` im Bereich 10000�
 ## Teststand und Roadmap
 
 Die Fiori-Vorschau wurde für PDF-Upload und bytegleichen Download, PNG- und JPEG-Speicherung, Anhangslöschung, Draft-Validierung und die Anhangssperre an einem geschlossenen Ticket geprüft. Einzelne Testlücken sind im Testbericht ausgewiesen.
+
+Die Abschlussabnahme des Ticketverlaufs bestätigte in Fiori alle vier Anhangsereignisse und die Draft-Regression mit regulärem `Activate`. Nach der Ticketlöschung blieben sechs Historienzeilen in der Tabelle erhalten, während OData keine Verlaufsdaten mehr lieferte. Alle fünf bestehenden ABAP-Tests und ein gezielter Rollback-Test vor dem Speichern bestanden. Offen sind die Prüfung mit zweiter Berechtigungsidentität, ein erzwungener Fehler im späten RAP-Save und mehrere Workflow-Aktionen innerhalb einer LUW. [Abnahme und Backlog](FIORI_TEST_RESULTS.md#abschlussabnahme-ticketverlauf-am-24-november-2026)
 
 Offene Ausbauschritte sind das rollenbasierte Berechtigungskonzept für Ticket-DELETE, direkte OData-Negativtests für geschlossene Tickets, ein belastbarer Test der Workflow-Sperre bei fremdem Bearbeitungsentwurf und die Laufzeitprüfung der SAP-Virenerkennung für den NovaDesk-Stream. Die MIME-Spalte bleibt bei offenen Tickets im Bearbeitungsmodus editierbar, damit der Standard-Upload den Typ setzen kann.
 

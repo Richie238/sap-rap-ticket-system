@@ -1,0 +1,61 @@
+@EndUserText.label: 'NovaDesk Ticketverlauf'
+@AccessControl.authorizationCheck: #MANDATORY
+@Metadata.ignorePropagatedAnnotations: true
+@UI.presentationVariant: [{
+  qualifier: 'TicketHistory',
+  sortOrder: [{ by: 'ChangedAt', direction: #DESC }],
+  visualizations: [{ type: #AS_LINEITEM }]
+}]
+define view entity ZC_NVD_TKT_HIST
+  as select from ZI_NVD_TKT_HIST
+{
+  @UI.hidden: true
+  key EventUUID,
+  @UI.hidden: true
+      TicketID,
+  @EndUserText.label: 'Ereignis'
+  @UI.lineItem: [{ position: 10, cssDefault.width: '15rem', importance: #HIGH }]
+      cast( case EventType
+        when 'TICKET_CREATED'       then 'Ticket erstellt'
+        when 'TICKET_DELETED'       then 'Ticket gelöscht'
+        when 'FIELD_CHANGED'        then 'Ticketfeld geändert'
+        when 'startWork'            then 'Bearbeitung gestartet'
+        when 'markResolved'         then 'Als gelöst markiert'
+        when 'reopenTicket'         then 'Ticket wieder geöffnet'
+        when 'closeTicket'          then 'Ticket geschlossen'
+        when 'ATTACHMENT_ADDED'     then 'Anhang hinzugefügt'
+        when 'ATTACHMENT_CHANGED'   then 'Anhang geändert'
+        when 'ATTACHMENT_REPLACED'  then 'Anhang ersetzt'
+        when 'ATTACHMENT_DELETED'   then 'Anhang gelöscht'
+        else EventType
+      end as abap.char(40) ) as EventLabel,
+  @EndUserText.label: 'Feldname'
+  @UI.lineItem: [{ position: 20, cssDefault.width: '10rem' }]
+      cast( case FieldName
+        when 'Subject'     then 'Betreff'
+        when 'RequesterID' then 'Anforderer'
+        when 'AssignedTo'  then 'Bearbeiter'
+        when 'Priority'    then 'Priorität'
+        when 'Status'      then 'Status'
+        when 'Category'    then 'Kategorie'
+        when 'DueDate'     then 'Fälligkeit'
+        when 'Description' then 'Beschreibung'
+        when 'FileName'    then 'Dateiname'
+        when 'MimeType'    then 'MIME-Typ'
+        else FieldName
+      end as abap.char(30) ) as FieldLabel,
+  @EndUserText.label: 'Altwert'
+  @UI.lineItem: [{ position: 30, cssDefault.width: '12rem' }]
+      OldValue,
+  @EndUserText.label: 'Neuwert'
+  @UI.lineItem: [{ position: 40, cssDefault.width: '12rem' }]
+      NewValue,
+  @EndUserText.label: 'Benutzer'
+  @UI.lineItem: [{ position: 50, cssDefault.width: '11rem', importance: #HIGH }]
+      ChangedBy,
+  @EndUserText.label: 'Zeitstempel'
+  @Semantics.systemDateTime.createdAt: true
+  @UI.lineItem: [{ position: 60, cssDefault.width: '15rem', importance: #HIGH }]
+      ChangedAt,
+      _Ticket
+}

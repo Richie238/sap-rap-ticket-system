@@ -10,6 +10,7 @@ etag master LocalLastChangedAt
 lock master total etag LastChangedAt
 authorization master( global )
 early numbering
+with additional save and cleanup with full data
 {
   field ( readonly )
    TicketID,
@@ -24,6 +25,14 @@ early numbering
   update;
   delete;
 
+  side effects
+  {
+    action startWork affects entity _History;
+    action markResolved affects entity _History;
+    action reopenTicket affects entity _History;
+    action closeTicket affects entity _History;
+  }
+
   association _Attachments { create ( features : instance, precheck ); with draft; }
 
   action ( features: instance, authorization: update ) startWork result [1] $self;
@@ -33,7 +42,7 @@ early numbering
 
   determination setStatusToOpen on modify { create; }
 
-  draft action Activate optimized;
+  draft action Activate;
   draft action Discard;
   draft action Edit;
   draft action Resume;
@@ -43,6 +52,9 @@ early numbering
   validation validateDraftStatus on save { create; field Status; }
 
   validation validateClosedAttachments on save { create; }
+
+  validation captureTicketAttachments on save { delete; }
+  validation captureHistoryBefore on save { create; field Subject, RequesterID, AssignedTo, Priority, Status, Category, DueDate, Description; }
 
   draft determine action Prepare
   {
@@ -79,6 +91,7 @@ draft table ZNVD_TKT_ATT_D
 lock dependent by _Ticket
 authorization dependent by _Ticket
 etag master LocalLastChangedAt
+with additional save with full data
 {
   field ( numbering : managed, readonly ) AttachmentUUID;
   field ( readonly ) TicketID, CreatedBy, CreatedAt, LocalLastChangedAt;
@@ -86,6 +99,7 @@ etag master LocalLastChangedAt
 
   update ( features : instance, precheck );
   delete ( features : instance, precheck );
+  validation captureAttachmentBefore on save { create; update; delete; }
   validation validateFile on save { create; field FileName, MimeType, FileContent; }
 
   association _Ticket { with draft; }

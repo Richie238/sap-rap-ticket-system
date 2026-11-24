@@ -1,0 +1,17 @@
+@EndUserText.label: 'NovaDesk Ticketverlauf Schnittstelle'
+@AccessControl.authorizationCheck: #MANDATORY
+define view entity ZI_NVD_TKT_HIST
+  as select from znvd_tkt_hist as History
+    inner join ZR_TICKET_ITEM_03000 as ActiveTicket on ActiveTicket.TicketID = History.ticket_id
+  association [1..1] to ZR_TICKET_ITEM_03000 as _Ticket on $projection.TicketID = _Ticket.TicketID
+{
+  key History.event_uuid as EventUUID,
+      History.ticket_id as TicketID,
+      History.event_type as EventType,
+      History.field_name as FieldName,
+      History.old_value as OldValue,
+      History.new_value as NewValue,
+      History.changed_by as ChangedBy,
+      History.changed_at as ChangedAt,
+      _Ticket
+}
