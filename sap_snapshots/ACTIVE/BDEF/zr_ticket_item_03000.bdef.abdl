@@ -1,0 +1,104 @@
+managed implementation in class ZBP_R_TICKET_ITEM_03 unique;
+strict ( 2 );
+with draft;
+extensible;
+define behavior for ZR_TICKET_ITEM_03000 alias ZrTicketItem03000
+persistent table ZTICKET_ITEM_03
+extensible
+draft table ZTCKT_ITM_0000_D
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+authorization master( global )
+early numbering
+{
+  field ( readonly )
+   TicketID,
+   Status,
+   CreatedBy,
+   CreatedAt,
+   LastChangedBy,
+   LocalLastChangedAt,
+   LastChangedAt;
+
+  create;
+  update;
+  delete;
+
+  association _Attachments { create ( features : instance, precheck ); with draft; }
+
+  action ( features: instance, authorization: update ) startWork result [1] $self;
+  action ( features: instance, authorization: update ) markResolved result [1] $self;
+  action ( features: instance, authorization: update ) reopenTicket result [1] $self;
+  action ( features: instance, authorization: update ) closeTicket result [1] $self;
+
+  determination setStatusToOpen on modify { create; }
+
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Edit;
+  draft action Resume;
+  validation validateAssignedTo on save { create; field AssignedTo; }
+  validation validateDueDate on save { create; field DueDate; }
+
+  validation validateDraftStatus on save { create; field Status; }
+
+  validation validateClosedAttachments on save { create; }
+
+  draft determine action Prepare
+  {
+    validation validateAssignedTo;
+    validation validateDueDate;
+    validation ( always ) validateDraftStatus;
+    validation ( always ) Attachment ~ validateFile;
+    validation ( always ) validateClosedAttachments;
+  }
+
+  mapping for ZTICKET_ITEM_03 corresponding extensible
+  {
+    TicketID = TICKET_ID;
+    Subject = SUBJECT;
+    RequesterID = REQUESTER_ID;
+    AssignedTo = ASSIGNED_TO;
+    Priority = PRIORITY;
+    Status = STATUS;
+    Category = CATEGORY;
+    Description = DESCRIPTION;
+    DueDate = DUE_DATE;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
+    LastChangedBy = LAST_CHANGED_BY;
+    LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+    LastChangedAt = LAST_CHANGED_AT;
+  }
+
+}
+
+define behavior for ZR_NVD_TKT_ATT alias Attachment
+persistent table ZNVD_TKT_ATT
+draft table ZNVD_TKT_ATT_D
+lock dependent by _Ticket
+authorization dependent by _Ticket
+etag master LocalLastChangedAt
+{
+  field ( numbering : managed, readonly ) AttachmentUUID;
+  field ( readonly ) TicketID, CreatedBy, CreatedAt, LocalLastChangedAt;
+  field ( features : instance ) FileContent, FileName;
+
+  update ( features : instance, precheck );
+  delete ( features : instance, precheck );
+  validation validateFile on save { create; field FileName, MimeType, FileContent; }
+
+  association _Ticket { with draft; }
+
+  mapping for ZNVD_TKT_ATT
+  {
+    AttachmentUUID = ATTACHMENT_UUID;
+    TicketID = TICKET_ID;
+    FileName = FILE_NAME;
+    MimeType = MIME_TYPE;
+    FileContent = FILE_CONTENT;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
+    LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+  }
+}

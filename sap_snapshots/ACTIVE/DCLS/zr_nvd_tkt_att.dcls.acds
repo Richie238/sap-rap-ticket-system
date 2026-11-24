@@ -1,0 +1,6 @@
+@EndUserText.label: 'Zugriffskontrolle für NovaDesk Anhänge'
+@MappingRole: true
+define role ZR_NVD_TKT_ATT {
+  grant select on ZR_NVD_TKT_ATT
+  where inheriting conditions from entity ZR_TICKET_ITEM_03000 replacing { root with _Ticket };
+}

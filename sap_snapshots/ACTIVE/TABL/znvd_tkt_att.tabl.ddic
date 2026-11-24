@@ -1,0 +1,18 @@
+@EndUserText.label : 'NovaDesk Ticket Attachments'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_tkt_att {
+
+  key client            : abap.clnt not null;
+  key attachment_uuid   : abap.raw(16) not null;
+  ticket_id             : abap.numc(8) not null;
+  file_name             : abap.char(255);
+  mime_type             : abap.char(128);
+  file_content          : abap.rawstring(0);
+  created_by            : abp_creation_user;
+  created_at            : abp_creation_tstmpl;
+  local_last_changed_at : abp_locinst_lastchange_tstmpl;
+
+}

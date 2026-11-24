@@ -1,0 +1,31 @@
+@Metadata.layer: #CORE
+@UI.headerInfo: { typeName: 'Anhang', typeNamePlural: 'Anhänge' }
+annotate view ZC_NVD_TKT_ATT with
+{
+  @UI.hidden: true
+  AttachmentUUID;
+
+  @UI.hidden: true
+  TicketID;
+
+  @UI.lineItem: [ { position: 15, importance: #HIGH, label: 'Dateiname' } ]
+  FileName;
+
+  @UI.facet: [ { id: 'File', type: #IDENTIFICATION_REFERENCE, label: 'Datei', position: 10 } ]
+  @UI.identification: [ { position: 10, label: 'Datei' } ]
+  @UI.lineItem: [ { position: 10, importance: #HIGH, label: 'Datei' } ]
+  FileContent;
+
+  @UI.dataPoint: { title: 'Dateityp' }
+  @UI.lineItem: [ { position: 20, importance: #MEDIUM, type: #AS_DATAPOINT, label: 'Dateityp' } ]
+  MimeType;
+
+  @UI.lineItem: [ { position: 30, importance: #MEDIUM, label: 'Erstellt am' } ]
+  CreatedAt;
+
+  @UI.lineItem: [ { position: 40, importance: #MEDIUM, label: 'Erstellt von' } ]
+  CreatedBy;
+
+  @UI.hidden: true
+  LocalLastChangedAt;
+}

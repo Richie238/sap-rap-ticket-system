@@ -1,0 +1,19 @@
+@EndUserText.label : 'NovaDesk Attachment Drafts'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_tkt_att_d {
+
+  key mandt          : mandt not null;
+  key attachmentuuid : abap.raw(16) not null;
+  ticketid           : abap.numc(8) not null;
+  filename           : abap.char(255);
+  mimetype           : abap.char(128);
+  filecontent        : abap.rawstring(0);
+  createdby          : abp_creation_user;
+  createdat          : abp_creation_tstmpl;
+  locallastchangedat : abp_locinst_lastchange_tstmpl;
+  "%admin"           : include sych_bdl_draft_admin_inc;
+
+}

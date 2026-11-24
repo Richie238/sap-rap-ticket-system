@@ -1,0 +1,10 @@
+{
+  "formatVersion": "ADT-4",
+  "header": {
+    "description": "Behavior Definition for ZR_TICKET_ITEM_03000",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "category": "behaviorClass",
+  "fixPointArithmetic": true
+}

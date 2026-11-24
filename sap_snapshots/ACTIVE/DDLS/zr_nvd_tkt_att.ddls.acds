@@ -1,0 +1,27 @@
+@AccessControl.authorizationCheck: #MANDATORY
+@EndUserText.label: 'NovaDesk Ticket Attachment'
+define view entity ZR_NVD_TKT_ATT
+  as select from ZNVD_TKT_ATT
+  association to parent ZR_TICKET_ITEM_03000 as _Ticket
+    on $projection.TicketID = _Ticket.TicketID
+{
+  key attachment_uuid as AttachmentUUID,
+  ticket_id as TicketID,
+  file_name as FileName,
+  @Semantics.mimeType: true
+  mime_type as MimeType,
+  @Semantics.largeObject: {
+    mimeType: 'MimeType',
+    fileName: 'FileName',
+    acceptableMimeTypes: [ 'application/pdf', 'image/png', 'image/jpeg' ],
+    contentDispositionPreference: #ATTACHMENT
+  }
+  file_content as FileContent,
+  @Semantics.user.createdBy: true
+  created_by as CreatedBy,
+  @Semantics.systemDateTime.createdAt: true
+  created_at as CreatedAt,
+  @Semantics.systemDateTime.localInstanceLastChangedAt: true
+  local_last_changed_at as LocalLastChangedAt,
+  _Ticket
+}

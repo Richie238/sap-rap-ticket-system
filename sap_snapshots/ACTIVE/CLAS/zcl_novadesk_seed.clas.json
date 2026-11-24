@@ -1,0 +1,9 @@
+{
+  "formatVersion": "ADT-4",
+  "header": {
+    "description": "Initialize missing NovaDesk reference values",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "fixPointArithmetic": true
+}

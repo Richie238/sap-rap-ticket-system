@@ -1,0 +1,10 @@
+{
+  "formatVersion": "ADT-4",
+  "header": {
+    "description": "Projection Behavior Definition for ZC_TICKET_ITEM_03",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "category": "behaviorClass",
+  "fixPointArithmetic": true
+}

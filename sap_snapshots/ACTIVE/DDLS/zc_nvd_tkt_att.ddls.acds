@@ -1,0 +1,16 @@
+@AccessControl.authorizationCheck: #MANDATORY
+@EndUserText.label: 'NovaDesk Ticket Attachment'
+@Metadata.allowExtensions: true
+define view entity ZC_NVD_TKT_ATT
+  as projection on ZR_NVD_TKT_ATT
+{
+  key AttachmentUUID,
+  TicketID,
+  FileName,
+  MimeType,
+  FileContent,
+  CreatedBy,
+  CreatedAt,
+  LocalLastChangedAt,
+  _Ticket : redirected to parent ZC_TICKET_ITEM_03
+}

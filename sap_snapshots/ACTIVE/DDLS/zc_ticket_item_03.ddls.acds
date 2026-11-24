@@ -1,0 +1,59 @@
+@Search.searchable: true
+@Metadata.allowExtensions: true
+@Metadata.ignorePropagatedAnnotations: true
+@Endusertext: {
+  Label: 'NovaDesk Ticket'
+}
+@Objectmodel: {
+  Sapobjectnodetype.Name: 'ZTICKET_ITEM_03'
+}
+@AccessControl.authorizationCheck: #MANDATORY
+define root view entity ZC_TICKET_ITEM_03
+  provider contract TRANSACTIONAL_QUERY
+  as projection on ZR_TICKET_ITEM_03000
+  association [1..1] to ZR_TICKET_ITEM_03000 as _BaseEntity on $projection.TICKETID = _BaseEntity.TICKETID
+{
+  key TicketID,
+  @Search.defaultSearchElement: true
+  Subject,
+  @Search.defaultSearchElement: true
+  RequesterID,
+  AssignedTo,
+  @ObjectModel.text.element: [ 'PriorityText' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_PRIO_VH_03', element: 'Priority' } }]
+  Priority,
+  _Priority.PriorityText as PriorityText,
+  @ObjectModel.text.element: [ 'StatusText' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_STATUS_VH_03', element: 'Status' } }]
+  Status,
+  _Status.StatusText as StatusText,
+  @ObjectModel.text.element: [ 'CategoryText' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_TICKET_CATEG_VH_03', element: 'Category' } }]
+  Category,
+  _Category.CategoryText as CategoryText,
+  @Search.defaultSearchElement: true
+  Description,
+  DueDate,
+  @Semantics: {
+    User.Createdby: true
+  }
+  CreatedBy,
+  @Semantics: {
+    Systemdatetime.Createdat: true
+  }
+  CreatedAt,
+  @Semantics: {
+    User.Localinstancelastchangedby: true
+  }
+  LastChangedBy,
+  @Semantics: {
+    Systemdatetime.Localinstancelastchangedat: true
+  }
+  LocalLastChangedAt,
+  @Semantics: {
+    Systemdatetime.Lastchangedat: true
+  }
+  LastChangedAt,
+  _BaseEntity,
+  _Attachments : redirected to composition child ZC_NVD_TKT_ATT
+}

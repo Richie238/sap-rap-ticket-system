@@ -1,0 +1,9 @@
+{
+  "formatVersion": "ADT-4",
+  "header": {
+    "description": "Provision the NovaDesk ticket number interval",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "fixPointArithmetic": true
+}

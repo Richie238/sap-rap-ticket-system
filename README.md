@@ -1,106 +1,69 @@
 # NovaDesk
 
-NovaDesk ist eine moderne Helpdesk-Anwendung für IT-Support- und Change-Request-Prozesse, entwickelt mit dem SAP RESTful Application Programming Model (RAP) auf der SAP Business Technology Platform.
+NovaDesk ist ein Ticket-System auf SAP BTP ABAP Environment. Die Anwendung nutzt ABAP Cloud, RAP Managed mit Draft, CDS und Fiori Elements für OData V4. In der Ticketliste stehen sechs Fachfilter für Ticketnummer, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit sowie die Draft-Filterung zur Verfügung. Wertehilfen liefern Klartext für Status, Priorität und Kategorie.
 
-## Funktionsumfang
+## Ticket-Workflow
 
-- Vollständiges Ticket-Lifecycle-Management mit Draft-Handling (Anlegen, Bearbeiten, Aktivieren, Verwerfen)
-- Automatische, schreibgeschützte Ticketnummer ab dem ersten Entwurf
-- Initialstatus „Offen“ und zustandsabhängige Aktion „Ticket schließen“
-- Serverseitige Validierung von Pflichtfeldern und Geschäftsregeln
-- Kategorisierung nach Typ (Incident, Change Request, Hardware, Software, Access Request)
-- Priorisierung (Niedrig bis Dringend)
-- Volltextsuche über zentrale Ticketfelder
-- Wertehilfen mit Klartext-Anzeige für Status, Priorität und Kategorie
+| Ausgangsstatus | Fiori-Aktion | RAP-Aktion | Zielstatus |
+| --- | --- | --- | --- |
+| Offen (O) | Bearbeitung starten | `startWork` | In Bearbeitung (B) |
+| In Bearbeitung (B) | Als gelöst markieren | `markResolved` | Gelöst (L) |
+| Gelöst (L) | Wieder öffnen | `reopenTicket` | In Bearbeitung (B) |
+| Gelöst (L) | Ticket schließen | `closeTicket` | Geschlossen (G) |
+| Geschlossen (G) | Keine Statusaktion | | Endzustand |
 
-## Architektur
+Neue Tickets beginnen mit `O`. Der Status ist schreibgeschützt und ändert sich über RAP-Aktionen. Instance Feature Control und die Action-Handler prüfen den Ausgangsstatus und sperren Aktionen für Draft-Instanzen und aktive Tickets mit Bearbeitungsentwurf. Leere und unbekannte Statuswerte erlauben keinen Übergang. Der Ticket-DELETE bleibt in Root und Projektion exponiert.
 
-```text
-Datenbanktabelle
-      ↓
-Interface View (CDS)
-      ↓
-Behavior Definition ←→ Behavior Pool (ABAP-Klasse)
-      ↓
-Projection View
-      ↓
-Service Definition → Service Binding (OData V4)
-      ↓
-Fiori Elements UI
+## Anhänge
+
+Die Objektseite zeigt Anhänge über `_Attachments` mit Dateiname, Dateityp, Erstellungsdatum und Ersteller. Upload, Download und Löschen nutzen Fiori-Elements-Standardfunktionen. Der OData-V4-Dateiinhalt ist ein `Edm.Stream`.
+
+- PDF, PNG und JPEG sind zulässig. RAP prüft bei der Aktivierung die Vollständigkeit von Dateiname, MIME-Typ und Inhalt, die Dateisignatur und das Limit von 10 MiB je Datei.
+- Leere Anhangszeilen sind während der Draft-Bearbeitung möglich. Dauerhaft gespeichert werden vollständige, gültige Anhänge.
+- Bei geschlossenen Tickets sperren Instance Feature Control, Prechecks und die zusätzliche Draft-Aktivierungsprüfung Änderungen. Der Download bleibt verfügbar.
+- Die Attachment-DCLs übernehmen die Zugriffsbedingungen des Ticket-BOs. Technische Schlüssel bleiben in der Oberfläche ausgeblendet.
+
+## Architektur und Datenmodell
+
+```mermaid
+flowchart TD
+  UI[Fiori Elements] --> Service[ZUI_TICKET_ITEM_03_O4]
+  Service --> Ticket[ZC_TICKET_ITEM_03]
+  Service --> Attach[ZC_NVD_TKT_ATT]
+  Ticket --> Root[ZR_TICKET_ITEM_03000]
+  Attach --> Child[ZR_NVD_TKT_ATT]
+  Root -->|_Attachments: 0..*| Child
+  Root --> Item[(ZTICKET_ITEM_03)]
+  Root --> Draft[(ZTCKT_ITM_0000_D)]
+  Child --> Files[(ZNVD_TKT_ATT)]
+  Child --> FileDraft[(ZNVD_TKT_ATT_D)]
 ```
 
-Das Datenmodell folgt konsequent der RAP-Schichtentrennung: Die Root-Ebene bildet ausschliesslich physische Tabellenfelder und Assoziationen ab; sämtliche UI-spezifische Logik (Textauflösung, Wertehilfen, Feldbeschriftungen) ist in der Projection-Ebene und den Metadata Extensions gekapselt.
+| Daten | Speicherung und Schlüssel |
+| --- | --- |
+| Ticket | `ZTICKET_ITEM_03` mit mandantenabhängigem `TicketID` als `NUMC(8)`. Enthält Betreff, Status, Priorität, Kategorie, Zuständigkeit, Beschreibung, Fälligkeit und Auditfelder. |
+| Ticketentwurf | `ZTCKT_ITM_0000_D`. Die alte Draft-Tabelle `ZTCKET_ITEM_03_D` existiert weiterhin. |
+| Anhang | `ZNVD_TKT_ATT` mit verwalteter RAW(16)-UUID, Ticketreferenz, Dateiname, MIME-Typ, Binärinhalt und Auditfeldern. |
+| Anhangsentwurf | `ZNVD_TKT_ATT_D`. Der Anhang hat einen lokalen ETag. Sperren und Änderungsberechtigungen sind vom Ticket abhängig. |
+| Referenzdaten | `ZTICKET_CAT_03`, `ZTICKET_PRIO_03` und `ZTICKET_STATUS` versorgen die Wertehilfen. |
 
-![NovaDesk RAP-Architektur](11_screenshots/novadesk_rap_architektur.svg)
+RAP Early Numbering reserviert Ticketnummern aus `ZNOVATKT/01` im Bereich 10000–99999. Die Nummer steht beim Anlegen des Entwurfs fest und bleibt schreibgeschützt. SAP speichert sie im bestehenden achtstelligen Schlüssel. Nummernlücken sind durch Pufferung möglich. Das Intervall muss im jeweiligen Zielmandanten eingerichtet werden. Beim Speichern prüft RAP außerdem den Bearbeiter und die Fälligkeit.
 
-Die aktive Kette in `NOVADESK_DEV` verwendet die Tabelle `ZTICKET_ITEM_03`, den RAP-Root `ZR_TICKET_ITEM_03000` mit Behavior-Pool `ZBP_R_TICKET_ITEM_03`, die Projektion `ZC_TICKET_ITEM_03` und das veröffentlichte OData-V4-UI-Binding `ZUI_TICKET_ITEM_03_O4`. Die Oberfläche läuft in der SAP Fiori Elements App Preview.
 ## Projektstruktur
 
-Der [SAP-Snapshot](sap_snapshots/NOVADESK_DEV_ZZ1_NOVADESK_PHASE_A/) enthält die gesicherten Quellen der aktiven Kette einschließlich Nummernkreisobjekt und Einrichtungs-Klasse. Die nachfolgend aufgeführten Verzeichnisse im Repository-Stamm dokumentieren frühere Entwicklungsstände.
+| Pfad | Zweck |
+| --- | --- |
+| [sap_snapshots/ACTIVE](sap_snapshots/ACTIVE/) | Aktiver SAP-Quellstand, mit SHA-256-Manifest |
+| [sap_snapshots](sap_snapshots/) | Übersicht und Kennzeichnung der historischen Snapshots. Das alte CDS und Behavior `ZR_TICKET_ITEM_03` sind nur historisch enthalten. |
+| Nummerierte Quellordner `01_…` bis `09_…` | Historische Entwicklungsdateien |
+| [11_screenshots](11_screenshots/) | Historische Fiori-Ansichten |
+| [FIORI_TEST_RESULTS.md](FIORI_TEST_RESULTS.md) | Nachweise und offene Laufzeittests |
 
-```text
-01_database_tables/         Persistenz- und Referenztabellen
-03_interface_views/         Root CDS View Entities
-04_projection_views/        Consumption Views mit UI-Annotationen
-05_behavior_definitions/    RAP Behavior Definitions (Root & Projection)
-06_behavior_implementations/ ABAP-Klassen: Determinations, Validations, Numbering
-07_value_helps/             Value-Help-Entities für Status, Priorität, Kategorie
-08_service_definitions/     OData-V4-Service-Definitionen
-09_metadata_extensions/     UI-Facetten, Feldpositionierung, Objekttitel
-notes/                      Technische Notizen zu Implementierungsdetails
-```
+## Teststand und Roadmap
 
-## Technologie-Stack
+Die Fiori-Vorschau wurde für PDF-Upload und bytegleichen Download, PNG- und JPEG-Speicherung, Anhangslöschung, Draft-Validierung und die Anhangssperre an einem geschlossenen Ticket geprüft. Einzelne Testlücken sind im Testbericht ausgewiesen.
 
-| Bereich | Technologie |
-|---|---|
-| Backend | ABAP Cloud, RAP (Managed Implementation) |
-| Datenmodell | CDS View Entities, Behavior Definitions |
-| Persistenz | SAP HANA (BTP ABAP Environment) |
-| Frontend | SAP Fiori Elements |
-| Protokoll | OData V4 |
-| Entwicklungsumgebung | ABAP Development Tools (ADT) für Eclipse und VS Code |
-
-## Datenmodell
-
-**Ticket** (Root-Entity)
-
-| Feld | Beschreibung |
-|---|---|
-| TicketID | Automatisch vergebener, schreibgeschützter Schlüssel vom Typ `NUMC(8)` |
-| Subject | Betreff, dient als Objekttitel in der UI |
-| RequesterID | Anforderer des Tickets |
-| AssignedTo | Zuständiger Bearbeiter (Pflichtfeld) |
-| Priority | Niedrig / Mittel / Hoch / Dringend |
-| Status | Offen / In Bearbeitung / Geschlossen / Gelöst |
-| Category | Incident / Change Request / Hardware / Software / Access Request |
-| DueDate | Fälligkeitsdatum (darf nicht in der Vergangenheit liegen) |
-
-## Geschäftslogik
-
-- **Determination:** Beim Anlegen wird der Status automatisch auf *Offen* gesetzt.
-- **Validation – Bearbeiter:** Ein Ticket kann nicht gespeichert werden, ohne dass ein Bearbeiter zugewiesen ist.
-- **Validation – Fälligkeitsdatum:** Das Fälligkeitsdatum muss heute oder später liegen.
-- **Early Numbering** vergibt die TicketID bereits beim Anlegen des Entwurfs über den internen SAP-Nummernkreis `ZNOVATKT/01` (`10000–99999`, kein automatischer Wiederanlauf). RAP prüft die reservierte Nummer gegen aktive Tickets und Entwürfe des veröffentlichten BOs. Beim Speichern bleibt die Nummer erhalten. Die Pufferung kann zu Lücken führen.
-- **Ticket schließen** ist für aktive Tickets mit Status Offen, In Bearbeitung oder Gelöst verfügbar, sofern kein Bearbeitungsentwurf vorhanden ist. Instance Feature Control steuert die Verfügbarkeit in Fiori. Der Action-Handler prüft dieselben Bedingungen serverseitig.
-
-## Fiori-Vorschau und Teststand
-
-Die Liste zeigt Ticketnummer, Betreff, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit. Die sechs Standardfilter sind Ticketnummer, Status, Priorität, Bearbeiter, Kategorie und Fälligkeit. Die Objektseite gliedert sich in **Ticketdaten**, **Zuständigkeit**, **Beschreibung** und **Technische Informationen**.
-
-Mit `sap-ui-language=DE` verwendet die Vorschau deutsche SAP-Standardaktionen und Datumsformate. Kategoriebezeichnungen wie „Change Request“ stammen aus den Referenzdaten. Neue Ticketnummern erscheinen fünfstellig. Bestehende Nummern wie `20` und `3030` behalten ihre bisherige Anzeige.
-
-In Mandant 100 wurden Liste, Suche, Filter, Wertehilfen und der Ticket-Lifecycle in Fiori geprüft. Zwei gleichzeitig offene Entwürfe derselben SAP-Anmeldung erhielten automatisch `10000` und `10010`. Ein Lauf mit zwei getrennten SAP-Benutzern und ein Test bei erschöpftem Nummernkreis stehen aus. Das Intervall wird pro Mandant eingerichtet. Ergebnisse und Einrichtungshinweise stehen im [Fiori-Testprotokoll](FIORI_TEST_RESULTS.md).
-
-## Nächste Ausbauschritte
-
-⬜ Attachments
-
-⬜ Email Integration
-
-⬜ Notification Handling
-
-⬜ Ticketverlauf
+Offene Ausbauschritte sind das rollenbasierte Berechtigungskonzept für Ticket-DELETE, direkte OData-Negativtests für geschlossene Tickets, ein belastbarer Test der Workflow-Sperre bei fremdem Bearbeitungsentwurf und die Laufzeitprüfung der SAP-Virenerkennung für den NovaDesk-Stream. Die MIME-Spalte bleibt bei offenen Tickets im Bearbeitungsmodus editierbar, damit der Standard-Upload den Typ setzen kann.
 
 ## Screenshots
 

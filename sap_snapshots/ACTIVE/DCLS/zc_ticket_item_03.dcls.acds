@@ -1,0 +1,6 @@
+@EndUserText.label: 'ZC_TICKET_ITEM_03'
+@MappingRole: true
+define role ZC_TICKET_ITEM_03 {
+  grant select on ZC_TICKET_ITEM_03
+  where INHERITING CONDITIONS FROM ENTITY ZR_TICKET_ITEM_03000 REPLACING { ROOT WITH _BaseEntity };
+}

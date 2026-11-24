@@ -1,5 +1,7 @@
 # NovaDesk – Fiori- und Laufzeittests
 
+Die Ergebnisse sind nach dem jeweiligen SAP-Stand dokumentiert. Die Abschnitte zur UX Phase 1, zur ursprünglichen Close-Aktion und zur Nummernvergabe sind historische Testprotokolle. Die dort beschriebene direkte Statusbearbeitung wurde durch die Workflow-Aktionen ersetzt.
+
 ## Fiori-Abnahme für UX Phase 1 am 23. November 2026
 
 Getestet in Chrome in der SAP Fiori Elements App Preview für `ZC_TICKET_ITEM_03` am veröffentlichten OData-V4-UI-Binding `ZUI_TICKET_ITEM_03_O4`, `NOVADESK_DEV`, Mandant 100. Getesteter Annotationsstand auf GitHub ist `26c1c0f89233a9e799729320b8fb35013d8238fd`.
@@ -118,3 +120,36 @@ Nur eigens für den Test angelegte Tickets in einem isolierten Testmandanten ver
 | Autorisierung | Mit berechtigter und unberechtigter Rolle Sichtbarkeit und Mutation gemäß vereinbarter DCL-/RAP-Policy prüfen. |
 
 Pro Ausführung Datum, Zielmandant, Objekt, Aktion, Werkzeug, beobachtetes Ergebnis, Fehlertext und nächste Aktion ergänzen. [SAP Service Binding](https://help.sap.com/docs/abap-cloud/abap-rap/service-binding) · [SAP OData-V4-Editor für VS Code](https://help.sap.com/docs/abap-cloud/abap-development-tools-for-visual-studio-code/working-with-odata-v4-service-a449458b1816492eb972ae5728ca2a28)
+
+
+## Workflow und Attachments am 24. November 2026
+
+Geprüft in der Fiori-Elements-Vorschau des OData-V4-UI-Bindings `ZUI_TICKET_ITEM_03_O4` in Mandant 100. Die folgenden Ergebnisse stammen aus der damaligen Abnahme.
+
+### Workflow
+
+| Fall | Beobachtung |
+| --- | --- |
+| `startWork`, `markResolved`, `closeTicket` | Der Fiori-Durchlauf am separaten Attachment-Testticket erreichte über Offen, In Bearbeitung und Gelöst den Endstatus Geschlossen. |
+| `reopenTicket` | Die Action war bei Gelöst sichtbar. Ein eindeutig bestätigter Übergang zurück nach In Bearbeitung ist in den vorliegenden Nachweisen nicht belegt. |
+| Draft und Endstatus | In den beobachteten Bearbeitungsentwürfen waren die Workflow-Aktionen in Fiori deaktiviert. Auf dem geschlossenen aktiven Testticket waren alle Workflow-Aktionen deaktiviert. |
+
+Ein gezielter Backend-Nachweis für alle vier Actions gegen eine aktive Instanz mit vorhandenem Draft fehlt. Insbesondere sind fremde Entwürfe und die separate Handler-Ablehnung unabhängig von der RAP-Feature-Prüfung offen.
+
+### Attachments
+
+| Fall | Beobachtung |
+| --- | --- |
+| OData V4 | Das Modell der Fiori-Vorschau meldete `FileContent` als `Edm.Stream`. |
+| PDF-Rundlauf | Eigene PDF-Datei hochgeladen, Ticket aktiviert und erneut geöffnet. Der Download war mit 597 Bytes bytegleich zum Original. |
+| PNG und JPEG | PNG ersetzte das PDF und ließ sich speichern. JPEG wurde als zweiter Anhang erstellt und gespeichert. Die MIME-Typen waren `image/png` und `image/jpeg`. |
+| Standard-Löschung | PNG in einem Bearbeitungsentwurf gelöscht und gespeichert. Die aktive Liste enthielt danach nur noch JPEG. |
+| Draft-Vollständigkeit | Anlegen einer leeren Attachment-Zeile war im Entwurf möglich. Ein leerer Dateiname blockierte die Aktivierung. |
+| MIME und Signatur | Der manuelle MIME-Wert `PDF` reproduzierte die Typfehlermeldung. PDF-Inhalt mit `image/jpeg` wurde wegen der abweichenden Signatur zurückgewiesen. Der konkrete MIME-Wert des ursprünglichen gemeldeten Entwurfs war nicht mehr verfügbar. |
+| Größenlimit | 10 MiB plus ein Byte wurden bei Aktivierung abgewiesen. Genau 10 MiB wurden nicht separat geprüft. |
+| Geschlossenes Ticket | In Fiori blieben Anlegen, Bearbeiten und Löschen gesperrt. Das JPEG ließ sich weiterhin bytegleich herunterladen. Der unveränderte Ticketentwurf wurde erfolgreich gespeichert. |
+| Bereinigung | Testticket 10002 wurde über Fiori gelöscht und verschwand aus der Liste. Die eigenen lokalen Testdateien wurden entfernt. |
+
+Die leere Standard-Anhangsseite wurde durch eine Stream-Facette korrigiert. Die ergänzten Attachment-DCLs beseitigten `ACM_UNEXPECTED_VALUE` beim Lesen aktiver Anhänge. Der gespeicherte Dateiname erscheint in der Fiori-Tabelle und im Downloadlink. Ein statisch schreibgeschützter MIME-Typ wurde verworfen, weil er beim Dateiwechsel die Übernahme des neuen Typs durch den Standard-Upload blockierte.
+
+Offen bleiben direkte OData-Schreibversuche gegen geschlossene Tickets, ein separater Test für fremde Bearbeitungsentwürfe und der Laufzeitnachweis der dokumentierten automatischen SAP-Virenprüfung für diesen Stream. Die MIME-Spalte bleibt im Bearbeitungsmodus offener Tickets editierbar. Die serverseitige Validierung ist aktiv.

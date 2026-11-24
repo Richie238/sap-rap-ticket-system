@@ -1,0 +1,99 @@
+@Metadata.layer: #CORE
+@UI.headerInfo.typeName: 'NovaDesk Ticket'
+@UI.headerInfo.typeNamePlural: 'NovaDesk Tickets'
+@UI.headerInfo.title.type: #STANDARD
+@UI.headerInfo.title.value: 'Subject'
+@UI.headerInfo.description.type: #STANDARD
+@UI.headerInfo.description.value: 'TicketID'
+annotate view ZC_TICKET_ITEM_03 with
+{
+  @UI.facet: [
+    { id: 'HeaderStatus', purpose: #HEADER, position: 10, type: #DATAPOINT_REFERENCE, targetQualifier: 'Status' },
+    { id: 'HeaderPriority', purpose: #HEADER, position: 20, type: #DATAPOINT_REFERENCE, targetQualifier: 'Priority' },
+    { id: 'TicketData', label: 'Ticketdaten', position: 10, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TicketData' },
+    { id: 'Responsibility', label: 'Zuständigkeit', position: 20, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Responsibility' },
+    { id: 'TicketDescription', label: 'Beschreibung', position: 30, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TicketDescription' },
+    { id: 'Attachments', label: 'Anhänge', position: 35, type: #LINEITEM_REFERENCE, targetElement: '_Attachments' },
+    { id: 'TechnicalInformation', label: 'Technische Informationen', position: 40, type: #FIELDGROUP_REFERENCE, targetQualifier: 'TechnicalInformation' }
+  ]
+  @EndUserText.label: 'Ticketnummer'
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 10, label: 'Ticketnummer' } ]
+  @UI.lineItem: [ { position: 10, importance: #MEDIUM, label: 'Ticketnummer' } ]
+  @UI.selectionField: [ { position: 10 } ]
+  TicketID;
+
+  @EndUserText.label: 'Betreff'
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 20, label: 'Betreff' } ]
+  @UI.lineItem: [ { position: 20, importance: #HIGH, label: 'Betreff' } ]
+  Subject;
+
+  @EndUserText.label: 'Status'
+  @UI.textArrangement: #TEXT_ONLY
+  @UI.dataPoint: { qualifier: 'Status', title: 'Status' }
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 30, label: 'Status' } ]
+  @UI.lineItem: [ { position: 30, importance: #HIGH, label: 'Status' } ]
+  @UI.selectionField: [ { position: 20 } ]
+  @UI.identification: [
+    { position: 40, type: #FOR_ACTION, dataAction: 'startWork', label: 'Bearbeitung starten' },
+    { position: 50, type: #FOR_ACTION, dataAction: 'markResolved', label: 'Als gelöst markieren' },
+    { position: 60, type: #FOR_ACTION, dataAction: 'reopenTicket', label: 'Wieder öffnen' },
+    { position: 70, type: #FOR_ACTION, dataAction: 'closeTicket', label: 'Ticket schließen' }
+  ]
+  Status;
+
+  @EndUserText.label: 'Priorität'
+  @UI.textArrangement: #TEXT_ONLY
+  @UI.dataPoint: { qualifier: 'Priority', title: 'Priorität' }
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 40, label: 'Priorität' } ]
+  @UI.lineItem: [ { position: 40, importance: #MEDIUM, label: 'Priorität' } ]
+  @UI.selectionField: [ { position: 30 } ]
+  Priority;
+
+  @EndUserText.label: 'Kategorie'
+  @UI.textArrangement: #TEXT_ONLY
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 50, label: 'Kategorie' } ]
+  @UI.lineItem: [ { position: 60, importance: #MEDIUM, label: 'Kategorie' } ]
+  @UI.selectionField: [ { position: 50 } ]
+  Category;
+
+  @EndUserText.label: 'Fälligkeit'
+  @UI.fieldGroup: [ { qualifier: 'TicketData', position: 60, label: 'Fälligkeit' } ]
+  @UI.lineItem: [ { position: 70, importance: #MEDIUM, label: 'Fälligkeit' } ]
+  @UI.selectionField: [ { position: 60 } ]
+  DueDate;
+
+  @EndUserText.label: 'Anforderer'
+  @UI.fieldGroup: [ { qualifier: 'Responsibility', position: 10, label: 'Anforderer' } ]
+  RequesterID;
+
+  @EndUserText.label: 'Bearbeiter'
+  @UI.fieldGroup: [ { qualifier: 'Responsibility', position: 20, label: 'Bearbeiter' } ]
+  @UI.lineItem: [ { position: 50, importance: #MEDIUM, label: 'Bearbeiter' } ]
+  @UI.selectionField: [ { position: 40 } ]
+  AssignedTo;
+
+  @EndUserText.label: 'Beschreibung'
+  @UI.fieldGroup: [ { qualifier: 'TicketDescription', position: 10, label: 'Beschreibung' } ]
+  @UI.multiLineText: true
+  Description;
+
+  @EndUserText.label: 'Erstellt von'
+  @UI.fieldGroup: [ { qualifier: 'TechnicalInformation', position: 10, label: 'Erstellt von' } ]
+  CreatedBy;
+
+  @EndUserText.label: 'Erstellt am'
+  @UI.fieldGroup: [ { qualifier: 'TechnicalInformation', position: 20, label: 'Erstellt am' } ]
+  CreatedAt;
+
+  @EndUserText.label: 'Zuletzt geändert von (lokal)'
+  @UI.fieldGroup: [ { qualifier: 'TechnicalInformation', position: 30, label: 'Zuletzt geändert von (lokal)' } ]
+  LastChangedBy;
+
+  @EndUserText.label: 'Zuletzt geändert am (lokal)'
+  @UI.fieldGroup: [ { qualifier: 'TechnicalInformation', position: 40, label: 'Zuletzt geändert am (lokal)' } ]
+  LocalLastChangedAt;
+
+  @EndUserText.label: 'Zuletzt geändert am'
+  @UI.fieldGroup: [ { qualifier: 'TechnicalInformation', position: 50, label: 'Zuletzt geändert am' } ]
+  LastChangedAt;
+}
