@@ -222,3 +222,7 @@ Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch ge
 ### Laufzeittest der eigenständigen CDS-Lesesicht
 
 `ZCL_NVD_READ_SCOPE_TEST` lief mit vier erfolgreichen ABAP-Unit-Testmethoden. Mit synthetischen SAP-Berechtigungswerten erhielt der Requester die verifizierten eigenen Tickets, der Agent nur das verifizierte zugewiesene Ticket mit aktiver Mitgliedschaft, der Manager die verifizierten Tickets im freigegebenen aktiven Team und der Benutzer ohne Leserecht keine Treffer. Die Testdaten blieben in den CDS-Testdoubles. Kein OData-, Stream-, Draft-Aktivierungs- oder RAP-Schreibtest wurde daraus abgeleitet.
+
+### Rollenabhängige Schreibregeln
+
+Sechs ABAP-Unit-Tests für `ZCL_NVD_TICKET_WRITE_POLICY` bestanden. Sie prüfen Requester-Felder und Anhangseigentum, Agent-Workflow und entzogene Teammitgliedschaft, Manager-Workflow und Zuweisung, getrennte Admin-Löschrechte, die Ablehnung unverifizierter Tickets sowie Schreibsperren bei Status G. Die Berechtigungsdaten sind simuliert. Die RAP-Global- und Instanzanbindung bestand die Syntaxprüfung einer Arbeitsversion. Positive und negative RAP-, Draft-Aktivierungs- und OData-Laufzeittests bleiben offen.

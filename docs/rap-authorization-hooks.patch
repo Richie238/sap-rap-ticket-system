@@ -1,0 +1,58 @@
+--- a/sap_snapshots/ACTIVE/BDEF/zr_ticket_item_03000.bdef.abdl
++++ b/sap_snapshots/ACTIVE/BDEF/zr_ticket_item_03000.bdef.abdl
+@@ -8,7 +8,7 @@
+ draft table ZTCKT_ITM_0000_D
+ etag master LocalLastChangedAt
+ lock master total etag LastChangedAt
+-authorization master( global )
++authorization master( global, instance )
+ early numbering
+ with additional save and cleanup with full data
+ {
+--- a/sap_snapshots/ACTIVE/CLAS/zbp_r_ticket_item_03.clas.implementations.abap
++++ b/sap_snapshots/ACTIVE/CLAS/zbp_r_ticket_item_03.clas.implementations.abap
+@@ -96,6 +96,9 @@
+            REQUEST requested_authorizations FOR ZrTicketItem03000
+         RESULT result.
+
++    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
++      IMPORTING keys REQUEST requested_authorizations FOR ZrTicketItem03000 RESULT result.
++
+     METHODS early_numbering_create FOR NUMBERING
+       IMPORTING entities FOR CREATE ZrTicketItem03000.
+
+@@ -161,7 +164,33 @@
+ ENDCLASS.
+
+ CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
+-  METHOD GET_GLOBAL_AUTHORIZATIONS.
++  METHOD get_global_authorizations.
++    IF requested_authorizations-%create = if_abap_behv=>mk-on.
++      result-%create = COND #( WHEN zcl_nvd_ticket_write_policy=>may_create( ) = abap_true
++        THEN if_abap_behv=>auth-allowed ELSE if_abap_behv=>auth-unauthorized ).
++    ENDIF.
++    IF requested_authorizations-%update = if_abap_behv=>mk-on.
++      result-%update = if_abap_behv=>auth-allowed.
++    ENDIF.
++    IF requested_authorizations-%delete = if_abap_behv=>mk-on.
++      result-%delete = if_abap_behv=>auth-allowed.
++    ENDIF.
++  ENDMETHOD.
++
++  METHOD get_instance_authorizations.
++    LOOP AT keys INTO DATA(key).
++      DATA(policy) = zcl_nvd_ticket_write_policy=>for_active_ticket( key-TicketID ).
++      APPEND INITIAL LINE TO result ASSIGNING FIELD-SYMBOL(<permission>).
++      <permission>-%tky = key-%tky.
++      IF requested_authorizations-%update = if_abap_behv=>mk-on.
++        <permission>-%update = COND #( WHEN policy-edit_ticket = abap_true
++          THEN if_abap_behv=>auth-allowed ELSE if_abap_behv=>auth-unauthorized ).
++      ENDIF.
++      IF requested_authorizations-%delete = if_abap_behv=>mk-on.
++        <permission>-%delete = COND #( WHEN policy-delete_ticket = abap_true
++          THEN if_abap_behv=>auth-allowed ELSE if_abap_behv=>auth-unauthorized ).
++      ENDIF.
++    ENDLOOP.
+   ENDMETHOD.
+
+   METHOD early_numbering_create.
