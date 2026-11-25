@@ -218,3 +218,7 @@ Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch ge
 - Die erste Syntaxprüfung der kombinierten DCL wies das fehlende Teamfeld in `ZNVD_AGT` nach. Nach der Feldkorrektur akzeptierte SAP die kombinierte Regel für verifizierte Tickets und die getrennten Lesepfade für Requester, Agent und Manager.
 - Die aktive Ticket-DCL blieb nach dem Arbeitsversuch auf `where TRUE`. Die DCL-Prüfung war ein Syntaxcheck. Die OData-, Navigations-, Attachment-, Draft-Aktivierungs- und Rollen-Laufzeittests stehen aus.
 - Die SAP-Launchpad-Prüfung bestätigte den App Finder. Eingeschränkte Rollen und unabhängige Anmeldungen wurden nicht bestätigt.
+
+### Laufzeittest der eigenständigen CDS-Lesesicht
+
+`ZCL_NVD_READ_SCOPE_TEST` lief mit vier erfolgreichen ABAP-Unit-Testmethoden. Mit synthetischen SAP-Berechtigungswerten erhielt der Requester die verifizierten eigenen Tickets, der Agent nur das verifizierte zugewiesene Ticket mit aktiver Mitgliedschaft, der Manager die verifizierten Tickets im freigegebenen aktiven Team und der Benutzer ohne Leserecht keine Treffer. Die Testdaten blieben in den CDS-Testdoubles. Kein OData-, Stream-, Draft-Aktivierungs- oder RAP-Schreibtest wurde daraus abgeleitet.

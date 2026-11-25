@@ -1,0 +1,13 @@
+@EndUserText.label: 'NovaDesk Ticket-Leseberechtigung'
+@MappingRole: true
+define role ZI_NVD_TICKET_READ_SCOPE {
+  grant select on ZI_NVD_TICKET_READ_SCOPE
+    where MigrationStatus = 'V' and (
+      ( RequesterUser = aspect user
+        and ( ) = aspect pfcg_auth( ZNVD_OWN, ACTVT = '03' ) )
+      or ( ActiveTeamID is not null and ActiveAgentUser = aspect user
+        and ( ActiveTeamID ) = aspect pfcg_auth( ZNVD_AGT, ZNVD_TEAM, ACTVT = '03' ) )
+      or ( ActiveTeamID is not null
+        and ( ActiveTeamID ) = aspect pfcg_auth( ZNVD_TKT, ZNVD_TEAM, ACTVT = '03' ) )
+    );
+}

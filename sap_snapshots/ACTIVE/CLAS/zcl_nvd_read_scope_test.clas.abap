@@ -1,0 +1,5 @@
+CLASS zcl_nvd_read_scope_test DEFINITION PUBLIC FINAL CREATE PUBLIC.
+ENDCLASS.
+
+CLASS zcl_nvd_read_scope_test IMPLEMENTATION.
+ENDCLASS.

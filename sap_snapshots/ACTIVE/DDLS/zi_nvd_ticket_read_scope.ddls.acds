@@ -1,0 +1,17 @@
+@EndUserText.label: 'NovaDesk Ticket-Leseberechtigung'
+@AccessControl.authorizationCheck: #MANDATORY
+define view entity ZI_NVD_TICKET_READ_SCOPE
+  as select from zticket_item_03 as Ticket
+    left outer join znvd_team as Team
+      on Team.support_team_id = Ticket.support_team_id and Team.is_active = 'X'
+    left outer join znvd_team_member as Agent
+      on Agent.support_team_id = Ticket.support_team_id
+      and Agent.business_user = Ticket.assigned_agent_user and Agent.is_active = 'X'
+{
+  key Ticket.ticket_id as TicketID,
+  Ticket.migration_status as MigrationStatus,
+  Ticket.requester_user as RequesterUser,
+  Ticket.assigned_agent_user as AssignedAgentUser,
+  Team.support_team_id as ActiveTeamID,
+  Agent.business_user as ActiveAgentUser
+}
