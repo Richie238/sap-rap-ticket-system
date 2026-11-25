@@ -1,0 +1,5 @@
+@EndUserText.label: 'Notizentwürfe – Zugriff gesperrt'
+@MappingRole: true
+define role ZR_NVD_NOTE_DQ {
+  grant select on ZR_NVD_NOTE_DQ where FALSE;
+}

@@ -5,6 +5,8 @@
 define root view entity ZR_TICKET_ITEM_03000
   as select from ZTICKET_ITEM_03
   composition [0..*] of ZR_NVD_TKT_ATT as _Attachments
+  composition [0..*] of ZR_NVD_COMMENT as _Comments
+  composition [0..*] of ZR_NVD_INTERNAL_NOTE as _InternalNotes
   association [0..*] to ZI_NVD_TKT_HIST as _History on $projection.TicketID = _History.TicketID
   association [0..1] to ZI_TICKET_PRIO_VH_03 as _Priority on $projection.Priority = _Priority.Priority
   association [0..1] to ZI_TICKET_STATUS_VH_03 as _Status on $projection.Status = _Status.Status
@@ -14,6 +16,10 @@ define root view entity ZR_TICKET_ITEM_03000
   subject as Subject,
   requester_id as RequesterID,
   assigned_to as AssignedTo,
+  requester_user as RequesterUser,
+  assigned_agent_user as AssignedAgentUser,
+  support_team_id as SupportTeamID,
+  migration_status as MigrationStatus,
   priority as Priority,
   status as Status,
   category as Category,
@@ -30,6 +36,8 @@ define root view entity ZR_TICKET_ITEM_03000
   @Semantics.systemDateTime.lastChangedAt: true
   last_changed_at as LastChangedAt,
   _Attachments,
+  _Comments,
+  _InternalNotes,
   _History,
   _Priority,
   _Status,

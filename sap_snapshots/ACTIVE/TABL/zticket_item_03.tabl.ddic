@@ -10,6 +10,10 @@ define table zticket_item_03 {
   subject               : abap.char(60);
   requester_id          : abap.char(10);
   assigned_to           : abap.char(10);
+  requester_user        : abp_creation_user;
+  assigned_agent_user   : abp_creation_user;
+  support_team_id       : abap.char(10);
+  migration_status      : abap.char(1);
   priority              : abap.char(1);
   status                : abap.char(1);
   category              : abap.char(2);

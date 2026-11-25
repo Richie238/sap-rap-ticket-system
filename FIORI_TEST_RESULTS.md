@@ -182,3 +182,27 @@ Ein gezielter Backend-Nachweis für alle vier Actions gegen eine aktive Instanz 
 Die leere Standard-Anhangsseite wurde durch eine Stream-Facette korrigiert. Die ergänzten Attachment-DCLs beseitigten `ACM_UNEXPECTED_VALUE` beim Lesen aktiver Anhänge. Der gespeicherte Dateiname erscheint in der Fiori-Tabelle und im Downloadlink. Ein statisch schreibgeschützter MIME-Typ wurde verworfen, weil er beim Dateiwechsel die Übernahme des neuen Typs durch den Standard-Upload blockierte.
 
 Offen bleiben direkte OData-Schreibversuche gegen geschlossene Tickets, ein separater Test für fremde Bearbeitungsentwürfe und der Laufzeitnachweis der dokumentierten automatischen SAP-Virenprüfung für diesen Stream. Die MIME-Spalte bleibt im Bearbeitungsmodus offener Tickets editierbar. Die serverseitige Validierung ist aktiv.
+
+## Rollen und Berechtigungen
+
+| Prüfung | Ergebnis |
+| --- | --- |
+| ADT Syntaxprüfung und Aktivierung | `ZNVD_TEAM` und `ZNVD_TEAM_MEMBER` gemeinsam geprüft und aktiviert. Beide aktiven Quellen aus `NOVADESK_DEV` zurückgelesen. |
+| Ticket- und Draft-Erweiterung | Ticketpersistenz, Draft-Tabelle, Root-CDS und Root-Behavior gemeinsam aktiviert. Alle vier aktiven Quellen zurückgelesen. Die anschließende Syntaxprüfung einschließlich Ticketprojektion und Projection Behavior war erfolgreich. |
+| Lesender Migrationsreport | Syntaxprüfung und Aktivierung bestanden. ABAP Unit insgesamt bestanden. Die Tests prüfen eine leere Zuordnungsliste, eine unbekannte Ticketnummer sowie eindeutige, mehrdeutige, fehlende und ungültige Zuordnungen. Die Klassifikationsprüfung verwendet SQL-Testdoubles. |
+| Beitrags-DCL und Service | Aktive Quellen geprüft. Kommentare und interne Notizen verwenden in den aktiven Lese- und Draft-Sichten `where FALSE`. Die aktive Service-Definition `ZUI_TICKET_ITEM_03_O4` exponiert nur Tickets, Anhänge und Verlauf. Dies ist ein Quellenbefund. |
+| Zugriff auf Tickets | Die aktive Root-DCL verwendet weiterhin `where TRUE`. Die fachlichen Regeln der Rollenmatrix sind noch nicht wirksam. |
+| IAM und Testidentitäten | Die generierte IAM-App wurde im SAP-Repository gefunden. Das Recht zur Benutzer- und Rollenpflege im Trial sowie getrennte, eingeschränkt berechtigte Anmeldungen konnten nicht bestätigt werden. |
+| Positive und negative Laufzeittests | Offen. Zu prüfen sind insbesondere Requester-Eigentum, Agentenzuweisung, Teamgrenzen des Managers, getrennte Verwaltungs- und Löschrechte des Admins, direkte Kindzugriffe, Streams, Draft-Eigentum, Rechteentzug vor Aktivierung und Zugriff auf interne Notizen. |
+
+Die Beitragsendpunkte bleiben bis zur erfolgreichen Sicherheitsabnahme unveröffentlicht.
+
+Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch geprüft. Eine Aktivierung und Laufzeitprüfungen der Bestandssperre sind offen. In Eclipse wurden die Assistenten für SUSO und SIA1 geöffnet und das NovaDesk-Paket wurde in der Paketsuche gefunden. Die nachfolgende Eclipse-Anlage von `ZNVD_TKT` und `ZNVD_TICKET_BC` wurde per ADT-MCP-Repository-Suche bestätigt. Fachliche Aktivitäts- und Teamberechtigungen, Rollenzuweisungen und getrennte Sicherheitsidentitäten sind noch nicht bestätigt.
+
+### Draft-Sichten für die Bestandssperre
+
+| Prüfung | Ergebnis |
+| --- | --- |
+| Aktivierung | `ZR_NVD_TICKET_DQ` und `ZR_NVD_ATTACHMENT_DQ` samt DCL aktiviert. Aktive Quellen zurückgelesen. |
+| ABAP Unit mit aktueller Identität | Der direkte CDS-Lesetest ergab null Zeilen in beiden Draft-Sichten. Der gesamte Lauf war erfolgreich. |
+| Fiori, EML, Navigation und Attachment-Streams | Die Draft-Sichten sind noch nicht im aktiven RAP-Behavior angebunden. Die End-to-End-Sperre, Schreibprüfungen, Draft-Aktivierung und getrennte Rollenidentitäten bleiben ungetestet. |

@@ -1,0 +1,19 @@
+@EndUserText.label: 'Anhangsentwürfe'
+@AccessControl.authorizationCheck: #MANDATORY
+define root view entity ZR_NVD_ATTACHMENT_DQ as select from ZNVD_TKT_ATT_D
+{
+  key attachmentuuid as AttachmentUUID,
+  ticketid as TicketID,
+  filename as FileName,
+  mimetype as MimeType,
+  filecontent as FileContent,
+  createdby as CreatedBy,
+  createdat as CreatedAt,
+  locallastchangedat as LocalLastChangedAt,
+  draftentitycreationdatetime,
+  draftentitylastchangedatetime,
+  draftadministrativedatauuid,
+  draftentityoperationcode,
+  hasactiveentity,
+  draftfieldchanges
+}

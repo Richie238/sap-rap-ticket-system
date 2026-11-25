@@ -60,6 +60,14 @@ Der Additional Saver in `ZBP_R_TICKET_ITEM_03` schreibt den Verlauf in derselben
 
 `ZI_NVD_TKT_HIST` verknüpft den Verlauf beim Lesen mit dem aktiven Ticket. Beide History-Entitäten übernehmen per DCL die Leseregel des Ticket-BOs. Die gegenwärtige Ticket-DCL enthält innerhalb des berechtigten Servicezugriffs keine Einschränkung je Ticket. Nach einer Ticketlöschung bleiben die Ereignisse physisch erhalten. Die lesende OData-Navigation `_History` und das direkt exponierte History-Entity-Set geben sie dann nicht mehr aus. Die Fiori-Objektseite zeigt Ereignis, Feldname, Altwert, Neuwert, Benutzer und Zeitstempel in absteigender Zeitfolge. Technische UUIDs sind in Fiori ausgeblendet. Die Ereignis-UUID bleibt der technische OData-Schlüssel.
 
+## Freigabeabhängigkeit des Beitragsmoduls
+
+Die Backend-Kompositionen für Kommentare und interne Notizen sind in `NOVADESK_DEV` vorbereitet. Die aktiven und Draft-Lesesichten sperren den Zugriff per DCL. RAP lehnt Schreibzugriffe ab und prüft beim Aktivieren erneut. Der veröffentlichte Ticketservice enthält keine Beitragsentitäten.
+
+Die Supportteam- und Mitgliedschaftstabellen `ZNVD_TEAM` und `ZNVD_TEAM_MEMBER`, die technischen Zuordnungsfelder in Ticket und Draft sowie der lesende Migrationsprüflauf `ZCL_NVD_MIGRATION_CHECK` sind aktiv. **Das Berechtigungsmodul ist unvollständig.** Die Migrationsklassifikation ist mit ABAP Unit abgedeckt. In Eclipse wurden das Authorization Object `ZNVD_TKT` und der Business Catalog `ZNVD_TICKET_BC` angelegt. Fachliche IAM-Konfiguration, Ticketautorisierung, Aktivierung der Bestandssperre und bestätigte Bestandszuordnungen stehen aus. [Berechtigungskonzept und Trial-Status](docs/AUTHORIZATION_CONCEPT.md)
+
+Vor Veröffentlichung muss das Rollenmodul Ticket-Sichtbarkeit, getrennte Beitragsschreibrechte und ein separates Leserecht für interne Notizen liefern. Die Einbindung muss Änderungen an gespeicherten Beiträgen weiterhin sperren und Rechteentzug bei offenen Entwürfen berücksichtigen. Die Freigabetests brauchen getrennte Testidentitäten für direkte Zugriffe, Navigation, Drafts und die Trennung von öffentlicher Historie und internem Audit. Positive Save-Tests für Autor, UTC-Zeitstempel und Audit-Erzeugung folgen mit der Rollenfreigabe.
+
 ## Projektstruktur
 
 | Pfad | Zweck |
@@ -77,6 +85,14 @@ Die Fiori-Vorschau wurde für PDF-Upload und bytegleichen Download, PNG- und JPE
 Die Abschlussabnahme des Ticketverlaufs bestätigte in Fiori alle vier Anhangsereignisse und die Draft-Regression mit regulärem `Activate`. Nach der Ticketlöschung blieben sechs Historienzeilen in der Tabelle erhalten, während OData keine Verlaufsdaten mehr lieferte. Alle fünf bestehenden ABAP-Tests und ein gezielter Rollback-Test vor dem Speichern bestanden. Offen sind die Prüfung mit zweiter Berechtigungsidentität, ein erzwungener Fehler im späten RAP-Save und mehrere Workflow-Aktionen innerhalb einer LUW. [Abnahme und Backlog](FIORI_TEST_RESULTS.md#abschlussabnahme-ticketverlauf-am-24-november-2026)
 
 Offene Ausbauschritte sind das rollenbasierte Berechtigungskonzept für Ticket-DELETE, direkte OData-Negativtests für geschlossene Tickets, ein belastbarer Test der Workflow-Sperre bei fremdem Bearbeitungsentwurf und die Laufzeitprüfung der SAP-Virenerkennung für den NovaDesk-Stream. Die MIME-Spalte bleibt bei offenen Tickets im Bearbeitungsmodus editierbar, damit der Standard-Upload den Typ setzen kann.
+
+### Langfristige Roadmap
+
+- **Customer-owned infrastructure first.** Kundeneigene Infrastruktur ist das bevorzugte Ziel für Betrieb und Kontrolle über NovaDesk.
+- **Kundeneigene SAP-Systeme.** Die Machbarkeit je Zielsystem anhand von Release, ABAP-Cloud- und RAP-Funktionen, IAM und Betriebsaufwand prüfen.
+- **Alternative Betriebsmodelle.** SAP Cloud und eine eigene Cloud-Infrastruktur als separate Betriebsmodelle evaluieren. SAP-Laufzeit, Schnittstellen und Verantwortlichkeiten je Variante festhalten.
+- **Nachweisbare Datenspeicherung und Deployment-Architektur.** Speicherorte, Datenflüsse, Zugriff, Aufbewahrung, Löschung, Backups und Wiederherstellung dokumentieren. Datenschutz und die Deployment-Architektur je Betriebsmodell verifizieren.
+- **Öffentliche Produktwebsite.** Erst umsetzen, wenn mindestens 95 % der definierten Produktziele mit dokumentierten Abnahmen nachgewiesen sind.
 
 ## Screenshots
 

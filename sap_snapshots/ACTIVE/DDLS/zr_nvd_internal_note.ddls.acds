@@ -1,0 +1,16 @@
+@EndUserText.label: 'Interne Ticketnotizen'
+@AccessControl.authorizationCheck: #MANDATORY
+define view entity ZR_NVD_INTERNAL_NOTE
+  as select from ZNVD_TKT_NOTE
+  association to parent ZR_TICKET_ITEM_03000 as _Ticket
+    on $projection.TicketID = _Ticket.TicketID
+{
+  key contribution_uuid as ContributionUUID,
+  ticket_id as TicketID,
+  body as Body,
+  @Semantics.user.createdBy: true
+  created_by as CreatedBy,
+  @Semantics.systemDateTime.createdAt: true
+  created_at as CreatedAt,
+  _Ticket
+}

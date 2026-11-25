@@ -1,0 +1,5 @@
+@EndUserText.label: 'Ticketkommentare – Zugriff gesperrt'
+@MappingRole: true
+define role ZR_NVD_COMMENT {
+  grant select on ZR_NVD_COMMENT where FALSE;
+}

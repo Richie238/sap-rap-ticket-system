@@ -10,6 +10,10 @@ define table ztckt_itm_0000_d {
   subject            : abap.char(60);
   requesterid        : abap.char(10);
   assignedto         : abap.char(10);
+  requesteruser      : abp_creation_user;
+  assignedagentuser  : abp_creation_user;
+  supportteamid      : abap.char(10);
+  migrationstatus    : abap.char(1);
   priority           : abap.char(1);
   status             : abap.char(1);
   category           : abap.char(2);

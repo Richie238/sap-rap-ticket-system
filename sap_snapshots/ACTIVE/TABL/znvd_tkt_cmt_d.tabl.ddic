@@ -1,0 +1,16 @@
+@EndUserText.label : 'Ticketkommentare'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_tkt_cmt_d {
+
+  key mandt            : mandt not null;
+  key contributionuuid : abap.raw(16) not null;
+  ticketid             : abap.numc(8) not null;
+  body                 : abap.char(1000);
+  createdby            : abp_creation_user;
+  createdat            : abp_creation_tstmpl;
+  "%admin"             : include sych_bdl_draft_admin_inc;
+
+}

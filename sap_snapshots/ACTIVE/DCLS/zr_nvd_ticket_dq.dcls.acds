@@ -1,0 +1,5 @@
+@EndUserText.label: 'Ticket-Entwürfe: Zugriff gesperrt'
+@MappingRole: true
+define role ZR_NVD_TICKET_DQ {
+  grant select on ZR_NVD_TICKET_DQ where FALSE;
+}

@@ -1,0 +1,5 @@
+@EndUserText.label: 'Interne Ticketnotizen – Zugriff gesperrt'
+@MappingRole: true
+define role ZR_NVD_INTERNAL_NOTE {
+  grant select on ZR_NVD_INTERNAL_NOTE where FALSE;
+}

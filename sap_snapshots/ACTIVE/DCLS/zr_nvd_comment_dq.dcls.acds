@@ -1,0 +1,5 @@
+@EndUserText.label: 'Kommentarentwürfe – Zugriff gesperrt'
+@MappingRole: true
+define role ZR_NVD_COMMENT_DQ {
+  grant select on ZR_NVD_COMMENT_DQ where FALSE;
+}

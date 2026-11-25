@@ -1,3 +1,24 @@
+CLASS lcl_contribution_policy DEFINITION FINAL.
+  PUBLIC SECTION.
+    CLASS-METHODS denial_reason
+      IMPORTING ticket_id TYPE zticket_item_03-ticket_id body TYPE znvd_tkt_cmt-body
+      RETURNING VALUE(message) TYPE string.
+ENDCLASS.
+
+CLASS lcl_contribution_policy IMPLEMENTATION.
+  METHOD denial_reason.
+    SELECT SINGLE FROM zticket_item_03 FIELDS status WHERE ticket_id = @ticket_id INTO @DATA(status).
+    IF sy-subrc <> 0 OR ( status <> 'O' AND status <> 'B' AND status <> 'L' ).
+      message = 'Beiträge erfordern ein vorhandenes, nicht geschlossenes Ticket.'.
+    ELSEIF body IS INITIAL.
+      message = 'Geben Sie einen Beitragstext ein.'.
+    ELSE.
+      " Replace this denial only when ticket and contribution permissions are available.
+      message = 'Ticketbeiträge sind bis zur Einführung des Berechtigungsmodells gesperrt.'.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_ticket_history DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: BEGIN OF attachment_before,
@@ -89,6 +110,10 @@ CLASS LHC_ZR_TICKET_ITEM_03000 DEFINITION INHERITING FROM CL_ABAP_BEHAVIOR_HANDL
 
     METHODS validateClosedAttachments FOR VALIDATE ON SAVE
       IMPORTING keys FOR ZrTicketItem03000~validateClosedAttachments.
+    METHODS precheck_create_comment FOR PRECHECK
+      IMPORTING keys FOR CREATE ZrTicketItem03000\_Comments.
+    METHODS precheck_create_internalnote FOR PRECHECK
+      IMPORTING keys FOR CREATE ZrTicketItem03000\_InternalNotes.
     METHODS precheck_create_attachments FOR PRECHECK
       IMPORTING keys FOR CREATE ZrTicketItem03000\_Attachments.
 
@@ -486,6 +511,24 @@ CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD precheck_create_comment.
+    LOOP AT keys INTO DATA(parent).
+      LOOP AT parent-%target INTO DATA(contribution).
+        APPEND VALUE #( %cid = contribution-%cid %is_draft = contribution-%is_draft
+                        %fail-cause = if_abap_behv=>cause-unauthorized ) TO failed-Comment.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD precheck_create_internalnote.
+    LOOP AT keys INTO DATA(parent).
+      LOOP AT parent-%target INTO DATA(contribution).
+        APPEND VALUE #( %cid = contribution-%cid %is_draft = contribution-%is_draft
+                        %fail-cause = if_abap_behv=>cause-unauthorized ) TO failed-InternalNote.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD precheck_create_attachments.
     DATA(editable_tickets) = lcl_attachment_policy=>editable_tickets( CORRESPONDING #( keys ) ).
     LOOP AT keys INTO DATA(key).
@@ -783,6 +826,108 @@ CLASS lhc_attachment IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS lhc_comment DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    METHODS precheck_update FOR PRECHECK IMPORTING keys FOR UPDATE Comment.
+    METHODS precheck_delete FOR PRECHECK IMPORTING keys FOR DELETE Comment.
+    METHODS stampContribution FOR DETERMINE ON SAVE
+      IMPORTING keys FOR Comment~stampContribution.
+    METHODS validateContribution FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Comment~validateContribution.
+ENDCLASS.
+
+CLASS lhc_comment IMPLEMENTATION.
+  METHOD precheck_update.
+    LOOP AT keys INTO DATA(key).
+      APPEND VALUE #( %tky = key-%tky %fail-cause = if_abap_behv=>cause-unauthorized
+                      %update = if_abap_behv=>mk-on ) TO failed-Comment.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD precheck_delete.
+    LOOP AT keys INTO DATA(key).
+      APPEND VALUE #( %tky = key-%tky %fail-cause = if_abap_behv=>cause-unauthorized
+                      %delete = if_abap_behv=>mk-on ) TO failed-Comment.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD stampContribution.
+    DATA created_at TYPE abp_creation_tstmpl.
+    GET TIME STAMP FIELD created_at.
+    DATA(created_by) = cl_abap_context_info=>get_user_technical_name( ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY Comment UPDATE FIELDS ( CreatedBy CreatedAt )
+      WITH VALUE #( FOR key IN keys ( %tky = key-%tky CreatedBy = created_by CreatedAt = created_at ) ).
+  ENDMETHOD.
+
+  METHOD validateContribution.
+    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY Comment FIELDS ( TicketID Body ) WITH CORRESPONDING #( keys )
+      RESULT DATA(contributions).
+    LOOP AT keys INTO DATA(key).
+      READ TABLE contributions INTO DATA(contribution) WITH KEY %tky = key-%tky.
+      DATA(message) = COND string(
+        WHEN sy-subrc <> 0 THEN 'Der Beitrag konnte nicht geprüft werden.'
+        ELSE lcl_contribution_policy=>denial_reason(
+          ticket_id = contribution-TicketID body = contribution-Body ) ).
+      APPEND VALUE #( %tky = key-%tky ) TO failed-Comment.
+      APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
+        severity = if_abap_behv_message=>severity-error text = message ) ) TO reported-Comment.
+    ENDLOOP.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lhc_internalnote DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    METHODS precheck_update FOR PRECHECK IMPORTING keys FOR UPDATE InternalNote.
+    METHODS precheck_delete FOR PRECHECK IMPORTING keys FOR DELETE InternalNote.
+    METHODS stampContribution FOR DETERMINE ON SAVE
+      IMPORTING keys FOR InternalNote~stampContribution.
+    METHODS validateContribution FOR VALIDATE ON SAVE
+      IMPORTING keys FOR InternalNote~validateContribution.
+ENDCLASS.
+
+CLASS lhc_internalnote IMPLEMENTATION.
+  METHOD precheck_update.
+    LOOP AT keys INTO DATA(key).
+      APPEND VALUE #( %tky = key-%tky %fail-cause = if_abap_behv=>cause-unauthorized
+                      %update = if_abap_behv=>mk-on ) TO failed-InternalNote.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD precheck_delete.
+    LOOP AT keys INTO DATA(key).
+      APPEND VALUE #( %tky = key-%tky %fail-cause = if_abap_behv=>cause-unauthorized
+                      %delete = if_abap_behv=>mk-on ) TO failed-InternalNote.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD stampContribution.
+    DATA created_at TYPE abp_creation_tstmpl.
+    GET TIME STAMP FIELD created_at.
+    DATA(created_by) = cl_abap_context_info=>get_user_technical_name( ).
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY InternalNote UPDATE FIELDS ( CreatedBy CreatedAt )
+      WITH VALUE #( FOR key IN keys ( %tky = key-%tky CreatedBy = created_by CreatedAt = created_at ) ).
+  ENDMETHOD.
+
+  METHOD validateContribution.
+    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
+      ENTITY InternalNote FIELDS ( TicketID Body ) WITH CORRESPONDING #( keys )
+      RESULT DATA(contributions).
+    LOOP AT keys INTO DATA(key).
+      READ TABLE contributions INTO DATA(contribution) WITH KEY %tky = key-%tky.
+      DATA(message) = COND string(
+        WHEN sy-subrc <> 0 THEN 'Der Beitrag konnte nicht geprüft werden.'
+        ELSE lcl_contribution_policy=>denial_reason(
+          ticket_id = contribution-TicketID body = contribution-Body ) ).
+      APPEND VALUE #( %tky = key-%tky ) TO failed-InternalNote.
+      APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
+        severity = if_abap_behv_message=>severity-error text = message ) ) TO reported-InternalNote.
+    ENDLOOP.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lsc_ticket_history DEFINITION INHERITING FROM cl_abap_behavior_saver_failed.
   PROTECTED SECTION.
     METHODS save_modified REDEFINITION.
@@ -959,7 +1104,20 @@ CLASS lsc_ticket_history IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    IF failed-ZrTicketItem03000 IS NOT INITIAL OR failed-Attachment IS NOT INITIAL OR rows IS INITIAL.
+    LOOP AT create-Comment INTO DATA(comment).
+      APPEND VALUE #( ticket_id = comment-TicketID event_type = 'COMMENT_ADDED'
+                      changed_by = comment-CreatedBy changed_at = comment-CreatedAt ) TO rows.
+    ENDLOOP.
+
+    DATA note_events TYPE STANDARD TABLE OF znvd_note_audit WITH EMPTY KEY.
+    LOOP AT create-InternalNote INTO DATA(note).
+      APPEND VALUE #( ticket_id = note-TicketID note_uuid = note-ContributionUUID
+                      event_type = 'NOTE_ADDED' changed_by = note-CreatedBy
+                      changed_at = note-CreatedAt ) TO note_events.
+    ENDLOOP.
+
+    IF failed-ZrTicketItem03000 IS NOT INITIAL OR failed-Attachment IS NOT INITIAL
+        OR ( rows IS INITIAL AND note_events IS INITIAL ).
       RETURN.
     ENDIF.
 
@@ -969,8 +1127,20 @@ CLASS lsc_ticket_history IMPLEMENTATION.
           <entry>-change_uuid = change_uuid.
           <entry>-event_uuid = cl_system_uuid=>create_uuid_x16_static( ).
         ENDLOOP.
-        INSERT znvd_tkt_hist FROM TABLE @rows.
+        LOOP AT note_events ASSIGNING FIELD-SYMBOL(<note_event>).
+          <note_event>-change_uuid = change_uuid.
+          <note_event>-event_uuid = cl_system_uuid=>create_uuid_x16_static( ).
+        ENDLOOP.
+        IF rows IS NOT INITIAL.
+          INSERT znvd_tkt_hist FROM TABLE @rows.
+        ENDIF.
+        IF note_events IS NOT INITIAL.
+          INSERT znvd_note_audit FROM TABLE @note_events.
+        ENDIF.
       CATCH cx_uuid_error cx_sy_open_sql_db.
+        LOOP AT note_events INTO DATA(failed_note).
+          APPEND VALUE #( ticket_id = failed_note-ticket_id ) TO rows.
+        ENDLOOP.
         LOOP AT rows INTO DATA(failed_entry) GROUP BY failed_entry-ticket_id INTO DATA(ticket_id).
           APPEND VALUE #( TicketID = ticket_id %fail-cause = if_abap_behv=>cause-unspecific )
             TO failed-ZrTicketItem03000.

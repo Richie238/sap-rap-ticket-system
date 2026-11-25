@@ -1,0 +1,16 @@
+@EndUserText.label: 'Kommentarentwürfe'
+@AccessControl.authorizationCheck: #MANDATORY
+define root view entity ZR_NVD_COMMENT_DQ as select from ZNVD_TKT_CMT_D
+{
+  key contributionuuid as ContributionUUID,
+  ticketid as TicketID,
+  body as Body,
+  createdby as CreatedBy,
+  createdat as CreatedAt,
+  draftentitycreationdatetime,
+  draftentitylastchangedatetime,
+  draftadministrativedatauuid,
+  draftentityoperationcode,
+  hasactiveentity,
+  draftfieldchanges
+}

@@ -196,6 +196,7 @@ CLASS ltc_attachment_history DEFINITION FINAL FOR TESTING DURATION SHORT RISK LE
     DATA attachment TYPE znvd_tkt_att-attachment_uuid.
     METHODS teardown.
     METHODS draft_lifecycle FOR TESTING.
+    METHODS contributions_fail_closed FOR TESTING.
     METHODS save_changes.
     METHODS add_file.
     METHODS edit_draft.
@@ -219,10 +220,13 @@ CLASS ltc_attachment_history IMPLEMENTATION.
   METHOD class_setup.
     cds_environment = cl_cds_test_environment=>create_for_multiple_cds( VALUE #(
       ( i_for_entity = 'ZR_TICKET_ITEM_03000' )
-      ( i_for_entity = 'ZR_NVD_TKT_ATT' ) ) ).
+      ( i_for_entity = 'ZR_NVD_TKT_ATT' )
+      ( i_for_entity = 'ZR_NVD_COMMENT' )
+      ( i_for_entity = 'ZR_NVD_INTERNAL_NOTE' ) ) ).
     cds_environment->enable_double_redirection( ).
     sql_environment = cl_osql_test_environment=>create( VALUE #(
-      ( 'ZNVD_TKT_HIST' ) ( 'ZTCKT_ITM_0000_D' ) ( 'ZNVD_TKT_ATT_D' ) ) ).
+      ( 'ZNVD_TKT_HIST' ) ( 'ZTCKT_ITM_0000_D' ) ( 'ZNVD_TKT_ATT_D' )
+      ( 'ZNVD_TKT_CMT_D' ) ( 'ZNVD_TKT_NOTE_D' ) ( 'ZNVD_NOTE_AUDIT' ) ) ).
   ENDMETHOD.
 
   METHOD class_teardown.
@@ -354,5 +358,84 @@ CLASS ltc_attachment_history IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial( existing ).
     assert_history( event = 'ATTACHMENT_DELETED' old_name = 'probe.pdf' ).
     assert_count( 6 ).
+  ENDMETHOD.
+  METHOD contributions_fail_closed.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE ENTITY ZrTicketItem03000
+      CREATE FIELDS ( TicketID Subject AssignedTo DueDate )
+      WITH VALUE #( ( %cid = 'TICKET' TicketID = ticket Subject = subject AssignedTo = 'IT'
+                      DueDate = cl_abap_context_info=>get_system_date( ) ) ) FAILED DATA(failed).
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+
+    DATA comment_uuid TYPE znvd_tkt_cmt-contribution_uuid VALUE '00000000000000000000000000000001'.
+    DATA note_uuid TYPE znvd_tkt_note-contribution_uuid VALUE '00000000000000000000000000000002'.
+    INSERT znvd_tkt_cmt FROM @( VALUE #( contribution_uuid = comment_uuid ticket_id = ticket body = 'Test' ) ).
+    INSERT znvd_tkt_note FROM @( VALUE #( contribution_uuid = note_uuid ticket_id = ticket body = 'Test' ) ).
+    INSERT znvd_note_audit FROM @( VALUE #( event_uuid = note_uuid note_uuid = note_uuid
+      ticket_id = ticket event_type = 'NOTE_ADDED' ) ).
+    edit_draft( ).
+    activate_draft( ).
+    edit_draft( ).
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000
+      ENTITY ZrTicketItem03000
+      CREATE BY \_Comments FIELDS ( Body )
+      WITH VALUE #( ( TicketID = ticket %is_draft = if_abap_behv=>mk-on
+        %target = VALUE #( ( %cid = 'CMT' %is_draft = if_abap_behv=>mk-on Body = 'Test' ) ) ) )
+      CREATE BY \_InternalNotes FIELDS ( Body )
+      WITH VALUE #( ( TicketID = ticket %is_draft = if_abap_behv=>mk-on
+        %target = VALUE #( ( %cid = 'NOTE' %is_draft = if_abap_behv=>mk-on Body = 'Test' ) ) ) )
+      MAPPED DATA(blocked_mapped) FAILED DATA(blocked).
+    cl_abap_unit_assert=>assert_initial( blocked_mapped ).
+    cl_abap_unit_assert=>assert_not_initial( blocked-Comment ).
+    cl_abap_unit_assert=>assert_not_initial( blocked-InternalNote ).
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000
+      ENTITY Comment UPDATE FIELDS ( Body )
+        WITH VALUE #( ( ContributionUUID = comment_uuid %is_draft = if_abap_behv=>mk-on Body = 'Änderung' ) )
+      ENTITY InternalNote DELETE FROM VALUE #( ( ContributionUUID = note_uuid %is_draft = if_abap_behv=>mk-on ) )
+      FAILED DATA(blocked_changes).
+    cl_abap_unit_assert=>assert_not_initial( blocked_changes-Comment ).
+    cl_abap_unit_assert=>assert_not_initial( blocked_changes-InternalNote ).
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE ENTITY ZrTicketItem03000
+      CREATE BY \_Comments FIELDS ( Body )
+      WITH VALUE #( ( TicketID = ticket %is_draft = if_abap_behv=>mk-on
+        %target = VALUE #( ( %cid = 'LOCAL_CMT' %is_draft = if_abap_behv=>mk-on Body = 'Test' ) ) ) )
+      CREATE BY \_InternalNotes FIELDS ( Body )
+      WITH VALUE #( ( TicketID = ticket %is_draft = if_abap_behv=>mk-on
+        %target = VALUE #( ( %cid = 'LOCAL_NOTE' %is_draft = if_abap_behv=>mk-on Body = 'Test' ) ) ) )
+      MAPPED DATA(local_mapped) FAILED DATA(local_failed).
+    cl_abap_unit_assert=>assert_initial( local_failed ).
+    cl_abap_unit_assert=>assert_not_initial( local_mapped-Comment[ 1 ]-ContributionUUID ).
+    cl_abap_unit_assert=>assert_not_initial( local_mapped-InternalNote[ 1 ]-ContributionUUID ).
+    save_changes( ).
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Activate FROM VALUE #( ( %cid = 'BLOCKED_ACTIVATE' TicketID = ticket ) )
+      MAPPED DATA(activate_mapped) FAILED DATA(activate_failed).
+    IF activate_failed IS INITIAL.
+      COMMIT ENTITIES RESPONSE OF ZR_TICKET_ITEM_03000 FAILED DATA(commit_failed).
+      cl_abap_unit_assert=>assert_not_initial( commit_failed ).
+    ENDIF.
+    ROLLBACK ENTITIES.
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      EXECUTE Discard FROM VALUE #( ( TicketID = ticket ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+
+    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 ENTITY ZrTicketItem03000
+      DELETE FROM VALUE #( ( TicketID = ticket ) ) FAILED failed.
+    cl_abap_unit_assert=>assert_initial( failed ).
+    save_changes( ).
+    SELECT COUNT( * ) FROM znvd_tkt_cmt WHERE ticket_id = @ticket INTO @DATA(comments).
+    SELECT COUNT( * ) FROM znvd_tkt_note WHERE ticket_id = @ticket INTO @DATA(notes).
+    SELECT COUNT( * ) FROM znvd_note_audit WHERE ticket_id = @ticket INTO @DATA(private_audit).
+    SELECT COUNT( * ) FROM znvd_tkt_hist WHERE ticket_id = @ticket
+      AND ( event_type = 'COMMENT_ADDED' OR event_type = 'NOTE_ADDED' ) INTO @DATA(public_events).
+    cl_abap_unit_assert=>assert_equals( act = comments exp = 0 msg = 'Kommentar-Kaskade' ).
+    cl_abap_unit_assert=>assert_equals( act = notes exp = 0 msg = 'Notiz-Kaskade' ).
+    cl_abap_unit_assert=>assert_equals( act = private_audit exp = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = public_events exp = 0 ).
   ENDMETHOD.
 ENDCLASS.

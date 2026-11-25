@@ -1,0 +1,15 @@
+@EndUserText.label : 'Interne Ticketnotizen'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_tkt_note {
+
+  key client            : abap.clnt not null;
+  key contribution_uuid : abap.raw(16) not null;
+  ticket_id             : abap.numc(8) not null;
+  body                  : abap.char(1000);
+  created_by            : abp_creation_user;
+  created_at            : abp_creation_tstmpl;
+
+}

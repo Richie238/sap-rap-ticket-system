@@ -1,0 +1,29 @@
+@EndUserText.label: 'Ticket-Entwürfe'
+@AccessControl.authorizationCheck: #MANDATORY
+define root view entity ZR_NVD_TICKET_DQ as select from ZTCKT_ITM_0000_D
+{
+  key ticketid as TicketID,
+  subject as Subject,
+  requesterid as RequesterID,
+  assignedto as AssignedTo,
+  requesteruser as RequesterUser,
+  assignedagentuser as AssignedAgentUser,
+  supportteamid as SupportTeamID,
+  migrationstatus as MigrationStatus,
+  priority as Priority,
+  status as Status,
+  category as Category,
+  description as Description,
+  duedate as DueDate,
+  createdby as CreatedBy,
+  createdat as CreatedAt,
+  lastchangedby as LastChangedBy,
+  locallastchangedat as LocalLastChangedAt,
+  lastchangedat as LastChangedAt,
+  draftentitycreationdatetime,
+  draftentitylastchangedatetime,
+  draftadministrativedatauuid,
+  draftentityoperationcode,
+  hasactiveentity,
+  draftfieldchanges
+}

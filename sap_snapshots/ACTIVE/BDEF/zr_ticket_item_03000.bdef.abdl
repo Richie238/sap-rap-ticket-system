@@ -14,6 +14,10 @@ with additional save and cleanup with full data
 {
   field ( readonly )
    TicketID,
+   RequesterUser,
+   AssignedAgentUser,
+   SupportTeamID,
+   MigrationStatus,
    Status,
    CreatedBy,
    CreatedAt,
@@ -34,6 +38,8 @@ with additional save and cleanup with full data
   }
 
   association _Attachments { create ( features : instance, precheck ); with draft; }
+  association _InternalNotes { create ( precheck ); with draft; }
+  association _Comments { create ( precheck ); with draft; }
 
   action ( features: instance, authorization: update ) startWork result [1] $self;
   action ( features: instance, authorization: update ) markResolved result [1] $self;
@@ -63,6 +69,8 @@ with additional save and cleanup with full data
     validation ( always ) validateDraftStatus;
     validation ( always ) Attachment ~ validateFile;
     validation ( always ) validateClosedAttachments;
+    validation ( always ) InternalNote ~ validateContribution;
+    validation ( always ) Comment ~ validateContribution;
   }
 
   mapping for ZTICKET_ITEM_03 corresponding extensible
@@ -71,6 +79,10 @@ with additional save and cleanup with full data
     Subject = SUBJECT;
     RequesterID = REQUESTER_ID;
     AssignedTo = ASSIGNED_TO;
+    RequesterUser = REQUESTER_USER;
+    AssignedAgentUser = ASSIGNED_AGENT_USER;
+    SupportTeamID = SUPPORT_TEAM_ID;
+    MigrationStatus = MIGRATION_STATUS;
     Priority = PRIORITY;
     Status = STATUS;
     Category = CATEGORY;
@@ -114,5 +126,60 @@ with additional save with full data
     CreatedBy = CREATED_BY;
     CreatedAt = CREATED_AT;
     LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+  }
+}
+define behavior for ZR_NVD_COMMENT alias Comment
+persistent table ZNVD_TKT_CMT
+draft table ZNVD_TKT_CMT_D query ZR_NVD_COMMENT_DQ
+lock dependent by _Ticket
+authorization dependent by _Ticket
+etag dependent by _Ticket
+with additional save with full data
+{
+  field ( numbering : managed, readonly ) ContributionUUID;
+  field ( readonly ) TicketID, CreatedBy, CreatedAt;
+
+  update ( precheck );
+  delete ( precheck );
+  determination stampContribution on save { create; }
+  validation validateContribution on save { create; update; }
+
+  association _Ticket { with draft; }
+
+  mapping for ZNVD_TKT_CMT
+  {
+    ContributionUUID = CONTRIBUTION_UUID;
+    TicketID = TICKET_ID;
+    Body = BODY;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
+  }
+}
+
+define behavior for ZR_NVD_INTERNAL_NOTE alias InternalNote
+persistent table ZNVD_TKT_NOTE
+draft table ZNVD_TKT_NOTE_D query ZR_NVD_NOTE_DQ
+lock dependent by _Ticket
+authorization dependent by _Ticket
+etag dependent by _Ticket
+with additional save with full data
+{
+  field ( numbering : managed, readonly ) ContributionUUID;
+  field ( readonly ) TicketID, CreatedBy, CreatedAt;
+
+  update ( precheck );
+  delete ( precheck );
+  determination stampContribution on save { create; }
+  validation validateContribution on save { create; update; }
+
+  association _Ticket { with draft; }
+
+  mapping for ZNVD_TKT_NOTE
+  {
+    ContributionUUID = CONTRIBUTION_UUID;
+    TicketID = TICKET_ID;
+    Body = BODY;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
   }
 }

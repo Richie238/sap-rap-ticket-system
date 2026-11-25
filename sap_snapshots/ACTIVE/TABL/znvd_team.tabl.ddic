@@ -1,0 +1,13 @@
+@EndUserText.label : 'NovaDesk Supportteams'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_team {
+
+  key client          : abap.clnt not null;
+  key support_team_id : abap.char(10) not null;
+  description         : abap.char(60);
+  is_active           : abap_boolean;
+
+}
