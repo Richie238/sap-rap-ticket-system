@@ -206,3 +206,9 @@ Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch ge
 | Aktivierung | `ZR_NVD_TICKET_DQ` und `ZR_NVD_ATTACHMENT_DQ` samt DCL aktiviert. Aktive Quellen zurückgelesen. |
 | ABAP Unit mit aktueller Identität | Der direkte CDS-Lesetest ergab null Zeilen in beiden Draft-Sichten. Der gesamte Lauf war erfolgreich. |
 | Fiori, EML, Navigation und Attachment-Streams | Die Draft-Sichten sind noch nicht im aktiven RAP-Behavior angebunden. Die End-to-End-Sperre, Schreibprüfungen, Draft-Aktivierung und getrennte Rollenidentitäten bleiben ungetestet. |
+
+### IAM-Teamrestriktion
+
+- Eclipse bestätigte den aktiven Status des Team-Berechtigungsfelds `ZNVD_TEAM`, die sichtbare Einbindung in `ZNVD_TKT` und den aktiven Business Catalog `ZNVD_TICKET_BC`. Das Datenelement `ZNVD_TEAM_ID` wurde per ADT MCP geprüft, aktiviert und aktiv zurückgelesen.
+- Die Syntaxprüfung der DCL-Arbeitsversion mit Teamfeld, Aktivität `03` und Verifizierungsstatus war erfolgreich. Die Arbeitsversion wurde nach der Prüfung zurückgesetzt. Die aktive Ticket-DCL bleibt auf `where TRUE`.
+- Laufzeittests mit getrennten Benutzerrollen für eigene, fremde und unverifizierte Tickets sowie Drafts, Navigation, Anhänge und interne Notizen stehen aus.

@@ -1,0 +1,36 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "NovaDesk Supportteam ID",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "dataTypeInformation": {
+    "category": "predefinedType",
+    "predefinedType": {
+      "dataType": "CHAR",
+      "length": 10
+    }
+  },
+  "fieldLabels": {
+    "short": "Team ID",
+    "shortLength": 10,
+    "medium": "Support Team ID",
+    "mediumLength": 20,
+    "long": "NovaDesk Support Team ID",
+    "longLength": 40,
+    "heading": "NovaDesk Support Team ID",
+    "headingLength": 55
+  },
+  "additionalProperties": {
+    "searchHelp": {
+      "name": "",
+      "parameter": ""
+    },
+    "bidirectionalOptions": {
+      "basicDirection": "rightToLeft"
+    },
+    "parameterId": "",
+    "defaultComponentName": ""
+  }
+}

@@ -60,3 +60,11 @@ Eclipse ADT zeigte im SUSO-Assistenten für das NovaDesk-Paket die fest vorgegeb
 Die Draft Query Views `ZR_NVD_TICKET_DQ` und `ZR_NVD_ATTACHMENT_DQ` samt eigener `where FALSE`-DCL sind aktiv. Der direkte CDS-Lesetest mit der aktuellen Identität lieferte in beiden Sichten null Zeilen. Die Sichten sind noch nicht im aktiven Behavior angebunden. Der Test belegt weder die Wirkung auf Fiori-Draft-Navigation noch die Wirkung bei offenen Fremdentwürfen.
 
 Eine vorübergehende globale Ticketsperre wurde von der automatischen Freigabeprüfung wegen des Service-Ausfallrisikos abgelehnt. Der inaktive RAP-Entwurf wurde anschließend auf den bisherigen Quellstand zurückgesetzt. Die produktiven Regeln und der Ticketservice sind weiterhin auf dem bisherigen Stand. Insbesondere ist `where TRUE` für den Ticket-Root aktiv. Die fachliche Rollenmatrix und die vollständige Sperre unverifizierter Tickets stehen aus.
+
+### Technisches Team-Berechtigungsfeld
+
+Das Datenelement `ZNVD_TEAM_ID` ist aktiv und verwendet `CHAR(10)`, passend zur Supportteamkennung. Eclipse ADT meldete das Berechtigungsfeld `ZNVD_TEAM` als aktiv. Im aktiven `ZNVD_TKT` der Objektklasse `CPAE` sind `ZNVD_TEAM` und das Aktivitätsfeld `ACTVT` sichtbar. Die hinterlegten Aktivitäten sind `01`, `02`, `03` und `06`. Der Business Catalog `ZNVD_TICKET_BC` ist aktiv und vom Typ **Assignable**.
+
+SAP akzeptierte in einer temporären DCL-Arbeitsversion die Bedingung `MigrationStatus = 'V' and ( SupportTeamID ) = aspect pfcg_auth( ZNVD_TKT, ZNVD_TEAM, ACTVT = '03' )`. Die aktive und die Arbeitsquelle wurden anschließend auf dem bisherigen Stand verifiziert. Dieser Nachweis prüft die technische Referenzierung des Teamfelds. Er enthält keine Rollenunterscheidung und keine Zugriffstests mit Teamrestriktionen.
+
+Die fachlichen Objekte, IAM-App-Verknüpfungen und Restriktionstypen für die Rollenmatrix sowie Business-Role-Zuweisungen und getrennte Testbenutzer stehen aus. Die geschützten Draft Query Views sind noch nicht im aktiven Behavior eingebunden. Kommentar- und Notizschnittstellen bleiben unveröffentlicht.
