@@ -68,3 +68,21 @@ Das Datenelement `ZNVD_TEAM_ID` ist aktiv und verwendet `CHAR(10)`, passend zur 
 SAP akzeptierte in einer temporären DCL-Arbeitsversion die Bedingung `MigrationStatus = 'V' and ( SupportTeamID ) = aspect pfcg_auth( ZNVD_TKT, ZNVD_TEAM, ACTVT = '03' )`. Die aktive und die Arbeitsquelle wurden anschließend auf dem bisherigen Stand verifiziert. Dieser Nachweis prüft die technische Referenzierung des Teamfelds. Er enthält keine Rollenunterscheidung und keine Zugriffstests mit Teamrestriktionen.
 
 Die fachlichen Objekte, IAM-App-Verknüpfungen und Restriktionstypen für die Rollenmatrix sowie Business-Role-Zuweisungen und getrennte Testbenutzer stehen aus. Die geschützten Draft Query Views sind noch nicht im aktiven Behavior eingebunden. Kommentar- und Notizschnittstellen bleiben unveröffentlicht.
+
+### Getrennte Berechtigungsobjekte und kombinierte DCL-Prüfung
+
+Eclipse ADT legte sieben weitere Authorization Objects im NovaDesk-Paket an. ADT MCP bestätigte alle Repository-Einträge.
+
+| Objekt | Vorgesehener fachlicher Zweck |
+| --- | --- |
+| `ZNVD_OWN` | Zugriff auf eigene Tickets |
+| `ZNVD_AGT` | Zugriff auf zugewiesene Tickets im berechtigten Team |
+| `ZNVD_FLOW` | Workflow-Aktionen |
+| `ZNVD_ATT` | Änderungsrechte für Anhänge |
+| `ZNVD_CMT` | Kommentierrechte |
+| `ZNVD_NOTE` | Gesonderte Rechte für interne Notizen |
+| `ZNVD_ADM` | Verwaltungsrechte |
+
+Das Teamfeld wurde in `ZNVD_AGT` gespeichert. Der SAP-Syntaxcheck akzeptierte danach einen DCL-Ausdruck, der den Verifizierungsstatus mit drei Lesepfaden kombiniert. Der Requester-Pfad verlangt technische Eigentümerschaft und `ZNVD_OWN`. Der Agent-Pfad verlangt persönliche Zuweisung, gefülltes Team und `ZNVD_AGT` für dieses Team. Der Manager-Pfad verlangt ein gefülltes Team und `ZNVD_TKT` für dieses Team. Die Prüfung verwendet `ACTVT = '03'`. Der Ausdruck war eine Arbeitsversion. Er wurde nach der Prüfung zurückgesetzt. Die zusätzliche Mitgliedschaftsprüfung, die produktive DCL-Aktivierung und die RAP-Operationsregeln stehen aus.
+
+Im Paket sind weiterhin die generierte Ticket-IAM-App und `ZNVD_TICKET_BC` nachweisbar. Die fachlichen Aktivitäten und Restriktionen der weiteren Objekte, die vollständige IAM-App- und Katalogkonfiguration sowie wirksame Rollenzuweisungen sind offen. Das Trial-Launchpad erreichte den App Finder. Der Zugriff auf Benutzer- und Rollenpflege sowie die Einrichtung separat anmeldbarer Testbenutzer ließen sich darüber nicht bestätigen. Rollenabhängige Laufzeitaussagen bleiben offen.

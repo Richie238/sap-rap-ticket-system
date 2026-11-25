@@ -212,3 +212,9 @@ Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch ge
 - Eclipse bestätigte den aktiven Status des Team-Berechtigungsfelds `ZNVD_TEAM`, die sichtbare Einbindung in `ZNVD_TKT` und den aktiven Business Catalog `ZNVD_TICKET_BC`. Das Datenelement `ZNVD_TEAM_ID` wurde per ADT MCP geprüft, aktiviert und aktiv zurückgelesen.
 - Die Syntaxprüfung der DCL-Arbeitsversion mit Teamfeld, Aktivität `03` und Verifizierungsstatus war erfolgreich. Die Arbeitsversion wurde nach der Prüfung zurückgesetzt. Die aktive Ticket-DCL bleibt auf `where TRUE`.
 - Laufzeittests mit getrennten Benutzerrollen für eigene, fremde und unverifizierte Tickets sowie Drafts, Navigation, Anhänge und interne Notizen stehen aus.
+
+### Kombinierte Ticket-Leseregel
+
+- Die erste Syntaxprüfung der kombinierten DCL wies das fehlende Teamfeld in `ZNVD_AGT` nach. Nach der Feldkorrektur akzeptierte SAP die kombinierte Regel für verifizierte Tickets und die getrennten Lesepfade für Requester, Agent und Manager.
+- Die aktive Ticket-DCL blieb nach dem Arbeitsversuch auf `where TRUE`. Die DCL-Prüfung war ein Syntaxcheck. Die OData-, Navigations-, Attachment-, Draft-Aktivierungs- und Rollen-Laufzeittests stehen aus.
+- Die SAP-Launchpad-Prüfung bestätigte den App Finder. Eingeschränkte Rollen und unabhängige Anmeldungen wurden nicht bestätigt.
