@@ -253,3 +253,9 @@ Drei neue ABAP-Unit-Fälle für die aktive Vorschlags-DCL bestanden. Der Zielage
 - `ZA_NVD_ASSIGN_COMMAND` wurde aktiviert und aktiv zurückgelesen. Der gemeinsame SAP-Syntaxcheck des RAP-Entwurfs mit fünf Aktionen, Global Authorization, Ticket-Lock und Additional Saver bestand. Das SAP-Release verlangt für `SET LOCKS` den aktiven Ticket-Schlüssel ohne `%is_draft`. Nach dem Check wurden alle produktiven Quellen mit dem bisherigen aktiven Stand abgeglichen.
 - Die bestehenden ABAP-Unit-Suiten für Ticket-Behavior, Write Policy und geschützte Lesesichten bestanden.
 - Die neuen Aktionen wurden nicht aktiviert. Positive und negative EML-Integrationsfälle für den vollständigen Ablauf, parallele Annahmen und ein gemeinsamer Rollback der Zuweisung und Audits sind weiterhin offen. Keine Service-Freigabe und keine Provisionierung von Testidentitäten.
+
+### IAM-Konfiguration und Laufzeitvoraussetzungen
+
+- ADT MCP bestätigte `ZNVD_TEAM` in den aktiven Objekten `ZNVD_FLOW`, `ZNVD_ATT` und `ZNVD_ADM`.
+- Die externe IAM-App war per AFF lesbar und enthielt noch keine Services. Der ADT-Logon brach vor der Serviceänderung ab. Katalogzuordnung und sieben getrennte Anmeldungen bleiben unverifiziert.
+- Keine RAP-Umstellung und keine neuen Laufzeittests für die fünf Zuweisungsaktionen. Konkurrenz, Rechteentzug und SAP-LUW-Rollback stehen aus.
