@@ -22,7 +22,16 @@
    delete;
 
    side effects
-@@ -55,6 +55,7 @@
+@@ -46,6 +46,8 @@
+   action ( features: instance, authorization: update ) reopenTicket result [1] $self;
+   action ( features: instance, authorization: update ) closeTicket result [1] $self;
+
++  action ( authorization: update ) assignTicket parameter ZA_NVD_TICKET_ASSIGN result [1] $self;
++
+   determination setStatusToOpen on modify { create; }
+
+   draft action Activate;
+@@ -55,6 +57,7 @@
    validation validateAssignedTo on save { create; field AssignedTo; }
    validation validateDueDate on save { create; field DueDate; }
 
@@ -30,15 +39,17 @@
    validation validateDraftStatus on save { create; field Status; }
 
    validation validateClosedAttachments on save { create; }
-@@ -66,6 +67,7 @@
+@@ -66,7 +69,9 @@
    {
      validation validateAssignedTo;
      validation validateDueDate;
 +    validation ( always ) authorizeBeforeSave;
      validation ( always ) validateDraftStatus;
++    validation ( always ) Attachment ~ authorizeAttachmentSave;
      validation ( always ) Attachment ~ validateFile;
      validation ( always ) validateClosedAttachments;
-@@ -99,7 +101,7 @@
+     validation ( always ) InternalNote ~ validateContribution;
+@@ -99,7 +104,7 @@
 
  define behavior for ZR_NVD_TKT_ATT alias Attachment
  persistent table ZNVD_TKT_ATT
@@ -47,9 +58,18 @@
  lock dependent by _Ticket
  authorization dependent by _Ticket
  etag master LocalLastChangedAt
+@@ -112,6 +117,8 @@
+   update ( features : instance, precheck );
+   delete ( features : instance, precheck );
+   validation captureAttachmentBefore on save { create; update; delete; }
++  validation authorizeAttachmentSave on save { create; update; }
++  validation authorizeAttachmentDelete on save { delete; }
+   validation validateFile on save { create; field FileName, MimeType, FileContent; }
+
+   association _Ticket { with draft; }
 --- a/sap_snapshots/ACTIVE/CLAS/zbp_r_ticket_item_03.clas.implementations.abap
 +++ b/sap_snapshots/ACTIVE/CLAS/zbp_r_ticket_item_03.clas.implementations.abap
-@@ -96,6 +96,19 @@
+@@ -96,6 +96,22 @@
             REQUEST requested_authorizations FOR ZrTicketItem03000
          RESULT result.
 
@@ -66,10 +86,13 @@
 +    METHODS authorizeBeforeSave FOR VALIDATE ON SAVE
 +      IMPORTING keys FOR ZrTicketItem03000~authorizeBeforeSave.
 +
++    METHODS assignTicket FOR MODIFY
++      IMPORTING keys FOR ACTION ZrTicketItem03000~assignTicket RESULT result.
++
      METHODS early_numbering_create FOR NUMBERING
        IMPORTING entities FOR CREATE ZrTicketItem03000.
 
-@@ -117,7 +130,6 @@
+@@ -117,7 +133,6 @@
      METHODS precheck_create_attachments FOR PRECHECK
        IMPORTING keys FOR CREATE ZrTicketItem03000\_Attachments.
 
@@ -77,7 +100,7 @@
      TYPES ticket_read_result TYPE TABLE FOR READ RESULT ZR_TICKET_ITEM_03000.
      METHODS get_workflow_tickets
        IMPORTING keys TYPE ticket_read_keys
-@@ -161,7 +173,101 @@
+@@ -161,7 +176,136 @@
  ENDCLASS.
 
  CLASS LHC_ZR_TICKET_ITEM_03000 IMPLEMENTATION.
@@ -151,7 +174,7 @@
 +  METHOD authorizeBeforeSave.
 +    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
 +      ENTITY ZrTicketItem03000 FIELDS ( RequesterUser MigrationStatus Subject Description
-+        RequesterID AssignedTo Priority Category DueDate )
++        RequesterID AssignedTo AssignedAgentUser Priority Category DueDate )
 +      WITH CORRESPONDING #( keys ) RESULT DATA(tickets) FAILED DATA(unreadable).
 +    failed-ZrTicketItem03000 = CORRESPONDING #( unreadable-ZrTicketItem03000 ).
 +    LOOP AT tickets INTO DATA(ticket).
@@ -160,6 +183,9 @@
 +      DATA(policy) = zcl_nvd_ticket_write_policy=>for_active_ticket( ticket-TicketID ).
 +      IF active_exists = abap_true AND policy-edit_ticket = abap_true
 +          AND ticket-RequesterID = active-requester_id AND ticket-AssignedTo = active-assigned_to
++          AND ( ticket-AssignedAgentUser = active-assigned_agent_user
++            OR zcl_nvd_ticket_write_policy=>may_assign_to(
++              ticket_id = ticket-TicketID target_agent = ticket-AssignedAgentUser ) = abap_true )
 +          AND ( policy-edit_operations = abap_true OR
 +            ( ticket-Priority = active-priority AND ticket-Category = active-category
 +              AND ticket-DueDate = active-due_date ) ).
@@ -177,10 +203,42 @@
 +        severity = if_abap_behv_message=>severity-error
 +        text = 'Die Berechtigung für diesen Speichervorgang fehlt.' ) ) TO reported-ZrTicketItem03000.
 +    ENDLOOP.
++  ENDMETHOD.
++
++  METHOD assignTicket.
++    DATA updates TYPE TABLE FOR UPDATE ZR_TICKET_ITEM_03000.
++    DATA(workflow_tickets) = get_workflow_tickets( CORRESPONDING #( keys ) ).
++    LOOP AT keys INTO DATA(key).
++      IF line_exists( workflow_tickets[ %tky = key-%tky ] )
++         AND zcl_nvd_ticket_write_policy=>may_assign_to(
++           ticket_id = key-TicketID target_agent = key-%param-TargetAgent ) = abap_true.
++        APPEND VALUE #( %tky = key-%tky AssignedAgentUser = key-%param-TargetAgent ) TO updates.
++      ELSE.
++        APPEND VALUE #( %tky = key-%tky %fail-cause = if_abap_behv=>cause-unauthorized )
++          TO failed-ZrTicketItem03000.
++        APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
++          severity = if_abap_behv_message=>severity-error
++          text = 'Zuweisung für dieses Ticket oder diesen Bearbeiter nicht erlaubt.' ) ) TO reported-ZrTicketItem03000.
++      ENDIF.
++    ENDLOOP.
++    IF updates IS INITIAL.
++      RETURN.
++    ENDIF.
++    MODIFY ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
++      ENTITY ZrTicketItem03000 UPDATE FIELDS ( AssignedAgentUser ) WITH updates
++      FAILED DATA(update_failed) REPORTED DATA(update_reported).
++    APPEND LINES OF update_failed-ZrTicketItem03000 TO failed-ZrTicketItem03000.
++    APPEND LINES OF update_reported-ZrTicketItem03000 TO reported-ZrTicketItem03000.
++    LOOP AT update_failed-ZrTicketItem03000 INTO DATA(error).
++      DELETE updates WHERE %tky = error-%tky.
++    ENDLOOP.
++    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
++      ENTITY ZrTicketItem03000 ALL FIELDS WITH CORRESPONDING #( updates ) RESULT DATA(tickets).
++    result = VALUE #( FOR ticket IN tickets ( %tky = ticket-%tky %param = ticket ) ).
    ENDMETHOD.
 
    METHOD early_numbering_create.
-@@ -232,6 +338,22 @@
+@@ -232,6 +376,22 @@
          WITH CORRESPONDING #( keys )
        RESULT DATA(tickets).
 
@@ -203,7 +261,7 @@
      DELETE tickets WHERE Status IS NOT INITIAL.
      IF tickets IS INITIAL.
        RETURN.
-@@ -247,12 +369,15 @@
+@@ -247,12 +407,15 @@
    METHOD validateAssignedTo.
      READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
        ENTITY ZrTicketItem03000
@@ -220,7 +278,7 @@
          APPEND VALUE #( %tky = ticket-%tky ) TO failed-ZrTicketItem03000.
          APPEND VALUE #(
            %tky = ticket-%tky
-@@ -532,7 +657,8 @@
+@@ -532,7 +695,8 @@
    METHOD precheck_create_attachments.
      DATA(editable_tickets) = lcl_attachment_policy=>editable_tickets( CORRESPONDING #( keys ) ).
      LOOP AT keys INTO DATA(key).
@@ -230,7 +288,7 @@
          CONTINUE.
        ENDIF.
        APPEND VALUE #( %tky = key-%tky
-@@ -551,7 +677,14 @@
+@@ -551,7 +715,14 @@
      LOOP AT keys INTO DATA(key).
        DATA(current_status) = VALUE status_code( tickets[ %tky = key-%tky ]-Status OPTIONAL ).
        DATA(next_status) = target_status( action = action current_status = current_status ).
@@ -246,7 +304,7 @@
          APPEND VALUE #( %tky = key-%tky Status = next_status ) TO tickets_to_update.
          CONTINUE.
        ENDIF.
-@@ -562,7 +695,7 @@
+@@ -562,7 +733,7 @@
          %tky = key-%tky
          %msg = new_message_with_text(
            severity = if_abap_behv_message=>severity-error
@@ -255,7 +313,18 @@
          TO action_reported-ZrTicketItem03000.
      ENDLOOP.
 
-@@ -689,7 +822,7 @@
+@@ -675,6 +846,10 @@
+       IMPORTING keys FOR UPDATE Attachment.
+     METHODS precheck_delete FOR PRECHECK
+       IMPORTING keys FOR DELETE Attachment.
++    METHODS authorizeAttachmentDelete FOR VALIDATE ON SAVE
++      IMPORTING keys FOR Attachment~authorizeAttachmentDelete.
++    METHODS authorizeAttachmentSave FOR VALIDATE ON SAVE
++      IMPORTING keys FOR Attachment~authorizeAttachmentSave.
+     METHODS validateFile FOR VALIDATE ON SAVE
+       IMPORTING keys FOR Attachment~validateFile.
+     METHODS editable_attachments
+@@ -689,7 +864,7 @@
    METHOD editable_attachments.
      DATA(read_keys) = keys.
      READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
@@ -264,7 +333,7 @@
      DATA(tickets) = lcl_attachment_policy=>editable_tickets(
        VALUE #( FOR attachment_row IN attachment_rows
          ( TicketID = attachment_row-TicketID %is_draft = attachment_row-%is_draft ) ) ).
-@@ -718,7 +851,10 @@
+@@ -718,7 +893,10 @@
    METHOD precheck_update.
      DATA(editable) = editable_attachments( CORRESPONDING #( keys ) ).
      LOOP AT keys INTO DATA(key).
@@ -276,7 +345,7 @@
          APPEND VALUE #( %tky = key-%tky
                          %fail-cause = if_abap_behv=>cause-unspecific %update = if_abap_behv=>mk-on ) TO failed-Attachment.
          APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
-@@ -731,7 +867,10 @@
+@@ -731,7 +909,10 @@
    METHOD precheck_delete.
      DATA(editable) = editable_attachments( CORRESPONDING #( keys ) ).
      LOOP AT keys INTO DATA(key).
@@ -288,6 +357,61 @@
          APPEND VALUE #( %tky = key-%tky
                          %fail-cause = if_abap_behv=>cause-unspecific %delete = if_abap_behv=>mk-on ) TO failed-Attachment.
          APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
+@@ -757,6 +938,54 @@
+       DELETE TABLE lcl_ticket_history=>attachments_before
+         WITH TABLE KEY attachment_uuid = attachment-attachment_uuid.
+       INSERT attachment INTO TABLE lcl_ticket_history=>attachments_before.
++    ENDLOOP.
++  ENDMETHOD.
++
++  METHOD authorizeAttachmentSave.
++    READ ENTITIES OF ZR_TICKET_ITEM_03000 IN LOCAL MODE
++      ENTITY Attachment FIELDS ( TicketID CreatedBy )
++      WITH CORRESPONDING #( keys ) RESULT DATA(pending).
++    LOOP AT keys INTO DATA(key).
++      SELECT SINGLE ticket_id, created_by FROM znvd_tkt_att
++        WHERE attachment_uuid = @key-AttachmentUUID INTO @DATA(active).
++      DATA(existing) = xsdbool( sy-subrc = 0 ).
++      DATA(attachment) = VALUE #( pending[ %tky = key-%tky ] OPTIONAL ).
++      DATA(allowed) = abap_false.
++      IF existing = abap_true.
++        DATA(policy) = zcl_nvd_ticket_write_policy=>for_active_ticket(
++          ticket_id = active-ticket_id attachment_owner = active-created_by ).
++        IF attachment IS NOT INITIAL AND attachment-TicketID = active-ticket_id.
++          allowed = policy-change_attachment.
++        ENDIF.
++      ELSEIF attachment IS NOT INITIAL.
++        policy = zcl_nvd_ticket_write_policy=>for_active_ticket( attachment-TicketID ).
++        allowed = policy-create_attachment.
++      ENDIF.
++      IF allowed = abap_true.
++        CONTINUE.
++      ENDIF.
++      APPEND VALUE #( %tky = key-%tky ) TO failed-Attachment.
++      APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
++        severity = if_abap_behv_message=>severity-error
++        text = 'Die Berechtigung für diese Anhangsänderung fehlt.' ) ) TO reported-Attachment.
++    ENDLOOP.
++  ENDMETHOD.
++
++  METHOD authorizeAttachmentDelete.
++    LOOP AT keys INTO DATA(key).
++      SELECT SINGLE ticket_id, created_by FROM znvd_tkt_att
++        WHERE attachment_uuid = @key-AttachmentUUID INTO @DATA(active).
++      IF sy-subrc = 0.
++        DATA(policy) = zcl_nvd_ticket_write_policy=>for_active_ticket(
++          ticket_id = active-ticket_id attachment_owner = active-created_by ).
++        IF policy-delete_attachment = abap_true.
++          CONTINUE.
++        ENDIF.
++      ENDIF.
++      APPEND VALUE #( %tky = key-%tky ) TO failed-Attachment.
++      APPEND VALUE #( %tky = key-%tky %msg = new_message_with_text(
++        severity = if_abap_behv_message=>severity-error
++        text = 'Die Berechtigung zum Löschen dieses Anhangs fehlt.' ) ) TO reported-Attachment.
+     ENDLOOP.
+   ENDMETHOD.
+
 --- a/sap_snapshots/ACTIVE/DCLS/zr_ticket_item_03000.dcls.acds
 +++ b/sap_snapshots/ACTIVE/DCLS/zr_ticket_item_03000.dcls.acds
 @@ -2,5 +2,5 @@
@@ -319,3 +443,76 @@
 -  grant select on ZR_NVD_ATTACHMENT_DQ where FALSE;
 +  grant select on ZR_NVD_ATTACHMENT_DQ where inheriting conditions from entity ZR_NVD_TICKET_DQ replacing { root with _TicketDraft };
  }
+--- a/sap_snapshots/ACTIVE/BDEF/zc_ticket_item_03.bdef.abdl
++++ b/sap_snapshots/ACTIVE/BDEF/zc_ticket_item_03.bdef.abdl
+@@ -14,6 +14,7 @@
+   use action markResolved;
+   use action reopenTicket;
+   use action closeTicket;
++  use action assignTicket;
+
+   use action Edit;
+   use action Activate;
+--- a/sap_snapshots/ACTIVE/CLAS/zcl_nvd_ticket_write_policy.clas.abap
++++ b/sap_snapshots/ACTIVE/CLAS/zcl_nvd_ticket_write_policy.clas.abap
+@@ -17,6 +17,10 @@
+              delete_attachment TYPE abap_bool,
+            END OF permissions.
+     CLASS-METHODS may_create RETURNING VALUE(allowed) TYPE abap_bool.
++    CLASS-METHODS may_assign_to
++      IMPORTING ticket_id TYPE zticket_item_03-ticket_id
++                target_agent TYPE zticket_item_03-assigned_agent_user
++      RETURNING VALUE(allowed) TYPE abap_bool.
+     CLASS-METHODS for_active_ticket
+       IMPORTING ticket_id    TYPE zticket_item_03-ticket_id
+                 attachment_owner TYPE zticket_item_03-created_by OPTIONAL
+@@ -49,6 +53,25 @@
+     allowed = xsdbool( sy-subrc = 0 ).
+   ENDMETHOD.
+
++  METHOD may_assign_to.
++    IF target_agent IS INITIAL OR for_active_ticket( ticket_id )-assign_ticket <> abap_true.
++      RETURN.
++    ENDIF.
++    SELECT SINGLE support_team_id FROM zticket_item_03
++      WHERE ticket_id = @ticket_id INTO @DATA(team).
++    IF sy-subrc <> 0 OR team IS INITIAL.
++      RETURN.
++    ENDIF.
++    SELECT SINGLE @abap_true FROM znvd_team_member
++      WHERE support_team_id = @team AND business_user = @target_agent
++        AND is_active = @abap_true INTO @DATA(active_member).
++    IF active_member <> abap_true.
++      RETURN.
++    ENDIF.
++    " An assignment cannot be enabled until the target's IAM eligibility can be verified.
++    allowed = abap_false.
++  ENDMETHOD.
++
+   METHOD for_active_ticket.
+     SELECT SINGLE * FROM zticket_item_03 WHERE ticket_id = @ticket_id INTO @DATA(ticket).
+     IF sy-subrc <> 0 OR ticket-migration_status <> 'V'.
+@@ -79,7 +102,22 @@
+       ID 'ACTVT' FIELD '02' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
+     rights-team_change = xsdbool( sy-subrc = 0 ).
+
+-    " Rights with unfinished IAM configuration stay denied.
++    rights-assignment = rights-team_change.
++    AUTHORITY-CHECK OBJECT 'ZNVD_FLOW'
++      ID 'ACTVT' FIELD '02' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
++    rights-workflow = xsdbool( sy-subrc = 0 ).
++    AUTHORITY-CHECK OBJECT 'ZNVD_ADM'
++      ID 'ACTVT' FIELD '06' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
++    rights-deletion = xsdbool( sy-subrc = 0 ).
++    AUTHORITY-CHECK OBJECT 'ZNVD_ATT'
++      ID 'ACTVT' FIELD '01' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
++    rights-attach_create = xsdbool( sy-subrc = 0 ).
++    AUTHORITY-CHECK OBJECT 'ZNVD_ATT'
++      ID 'ACTVT' FIELD '02' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
++    rights-attach_change = xsdbool( sy-subrc = 0 ).
++    AUTHORITY-CHECK OBJECT 'ZNVD_ATT'
++      ID 'ACTVT' FIELD '06' ID 'ZNVD_TEAM' FIELD ticket-support_team_id.
++    rights-attach_delete = xsdbool( sy-subrc = 0 ).
+     result = evaluate( ticket = ticket rights = rights user_id = user_id
+       active_team = active_team active_assignment = active_assignment
+       attachment_owner = attachment_owner ).

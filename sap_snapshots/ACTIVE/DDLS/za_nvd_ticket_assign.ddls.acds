@@ -1,0 +1,5 @@
+@EndUserText.label: 'NovaDesk Ticket-Zuweisung'
+define abstract entity ZA_NVD_TICKET_ASSIGN
+{
+  TargetAgent : abp_creation_user;
+}

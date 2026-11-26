@@ -233,3 +233,9 @@ Sechs ABAP-Unit-Tests für `ZCL_NVD_TICKET_WRITE_POLICY` bestanden. Sie prüfen 
 - Nach Aktivierung der CDS-Beziehungen bestanden die bestehenden ABAP-Unit-Suiten des RAP-Behavior-Pools und der geschützten CDS-Lesesicht.
 - Der erweiterte RAP-/DCL-Arbeitsentwurf hat den SAP-Syntaxcheck bestanden. Er wurde nicht aktiviert. Die aktiven Quellen wurden nach dem Zurücksetzen der Arbeitsversion verifiziert.
 - Die aktive IAM-App `ZNVD_TICKET_EXT` wurde in Eclipse bestätigt. IAM-Katalogzuordnung, produktive Instanzautorisierung, Draft-Aktivierung und Rollen-Ende-zu-Ende-Tests stehen aus.
+
+### Zuweisungsaktion und Child-Save-Checks
+
+- Der abstrakte Zuweisungsparameter wurde aktiviert und aktiv zurückgelesen. Die vollständige SAP-Syntaxprüfung des erweiterten Entwurfs bestand nach Aufteilung der Anhangsvalidierung und Entfernung der im Cloud-Release unzulässigen Prüfung `FOR USER`.
+- Die separate IAM-Feldprüfung meldete `ZNVD_TEAM` als fehlend in `ZNVD_FLOW`, `ZNVD_ATT` und `ZNVD_ADM`. Alle getesteten SAP-Arbeitsversionen wurden auf den aktiven Stand zurückgesetzt.
+- Der Entwurf wurde nicht aktiviert. Neue Laufzeittests für Zuweisung, Child-Änderungen, Draft-Aktivierung, Service-Cutover und Rückfall stehen aus.
