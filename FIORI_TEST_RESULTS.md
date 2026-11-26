@@ -239,3 +239,7 @@ Sechs ABAP-Unit-Tests für `ZCL_NVD_TICKET_WRITE_POLICY` bestanden. Sie prüfen 
 - Der abstrakte Zuweisungsparameter wurde aktiviert und aktiv zurückgelesen. Die vollständige SAP-Syntaxprüfung des erweiterten Entwurfs bestand nach Aufteilung der Anhangsvalidierung und Entfernung der im Cloud-Release unzulässigen Prüfung `FOR USER`.
 - Die separate IAM-Feldprüfung meldete `ZNVD_TEAM` als fehlend in `ZNVD_FLOW`, `ZNVD_ATT` und `ZNVD_ADM`. Alle getesteten SAP-Arbeitsversionen wurden auf den aktiven Stand zurückgesetzt.
 - Der Entwurf wurde nicht aktiviert. Neue Laufzeittests für Zuweisung, Child-Änderungen, Draft-Aktivierung, Service-Cutover und Rückfall stehen aus.
+
+### Freigabeblocker der IAM-Umstellung
+
+Die Zielbenutzerprüfung ist als Architekturentscheidung offen. Für den aktiven Service stehen die sieben unabhängigen Rollenidentitäten und positive sowie negative Laufzeittests zu Zuweisung, Workflow, Anhängen, Draft-Aktivierung, Löschkaskaden und direkten Zugriffen weiterhin aus. In diesem Schritt wurden keine Testbenutzer, Rollen oder Bestandszuordnungen angelegt.

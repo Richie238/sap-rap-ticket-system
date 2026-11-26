@@ -135,3 +135,9 @@ Eclipse ADT zeigte die vorbereitete externe IAM-App `ZNVD_TICKET_EXT` als aktiv.
 Der Entwurf ergänzt getrennte Anhangsprüfungen für Create und Update beim Speichern und in Draft Prepare sowie für Delete beim Speichern. Der erste Check zeigte, dass SAP eine Child-Validierung mit Delete-Trigger in Prepare ablehnt. Nach der Aufteilung bestand der gemeinsame SAP-Syntaxcheck für Policy, Behavior Pool, Root- und Projection Behavior und DCLs. Die Wirkung beim Löschen eines Bearbeitungsentwurfs mit Anhang, bei Draft-Aktivierung und bei Ticket-Löschkaskaden ist im Zielstand noch nachzuweisen.
 
 Die Erweiterung referenziert `ZNVD_FLOW` für Workflow, `ZNVD_ATT` für Anhangsänderungen und `ZNVD_ADM` für Ticket-Delete. Ein separater semantischer SAP-Check zeigte, dass `ZNVD_TEAM` in allen drei Authorization Objects fehlt. Es wurden keine pauschalen Rechte als Ersatz eingerichtet. Die wirksame Service- und Katalogzuordnung von `ZNVD_TICKET_EXT` ist weiterhin offen. Diese Befunde blockieren die Umstellung. Der aktive Ticketservice und die Beitragsschnittstellen wurden nicht umgestellt.
+
+### Entscheidung zur Zielbenutzerprüfung
+
+Für die fehlende wirksame Agent-IAM-Prüfung ist die [Architekturentscheidung](ADR_AGENT_AUTHORIZATION.md) dokumentiert. Die Empfehlung ist ein Manager-Vorschlag mit anschließender Annahme durch den Zielagenten unter seiner eigenen IAM-Identität. Dieser Ablauf benötigt fachliche Freigabe. Der bestehende Integrationsentwurf verweigert Zuweisungen weiterhin.
+
+Die Pflege von `ZNVD_TEAM` in `ZNVD_FLOW`, `ZNVD_ATT` und `ZNVD_ADM` konnte in dieser Sitzung nicht abgeschlossen werden. Die Eclipse-Suche ließ sich für das Zielobjekt nicht stabil im Vordergrund öffnen. Die externe IAM-App hat im geprüften Services-Reiter keine Servicezuordnung angezeigt. Die Katalogzuordnung und getrennte Testidentitäten bleiben unbestätigt. Es wurde keine Service-Umstellung durchgeführt.
