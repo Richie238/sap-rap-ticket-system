@@ -247,3 +247,9 @@ Die Zielbenutzerprüfung ist als Architekturentscheidung offen. Für den aktiven
 ### Zweistufige Zuweisung
 
 Drei neue ABAP-Unit-Fälle für die aktive Vorschlags-DCL bestanden. Der Zielagent sah nur seinen offenen Vorschlag bei aktiver Teammitgliedschaft. Der Manager sah die Vorschläge seines berechtigten Teams. Ohne Berechtigung blieb die Sicht leer. Andere Ziele, nicht verifizierte Tickets, inaktive Mitgliedschaften und abgeschlossene Vorschläge für den Agenten wurden als Negativfälle geprüft. Die Vorschlagsaktionen, das Schreiben des Audits und der gemeinsame Speichervorgang mit der effektiven Zuweisung sind noch nicht implementiert und wurden nicht zur Laufzeit geprüft.
+
+### Fünf Zuweisungsaktionen im RAP-Integrationsentwurf
+
+- `ZA_NVD_ASSIGN_COMMAND` wurde aktiviert und aktiv zurückgelesen. Der gemeinsame SAP-Syntaxcheck des RAP-Entwurfs mit fünf Aktionen, Global Authorization, Ticket-Lock und Additional Saver bestand. Das SAP-Release verlangt für `SET LOCKS` den aktiven Ticket-Schlüssel ohne `%is_draft`. Nach dem Check wurden alle produktiven Quellen mit dem bisherigen aktiven Stand abgeglichen.
+- Die bestehenden ABAP-Unit-Suiten für Ticket-Behavior, Write Policy und geschützte Lesesichten bestanden.
+- Die neuen Aktionen wurden nicht aktiviert. Positive und negative EML-Integrationsfälle für den vollständigen Ablauf, parallele Annahmen und ein gemeinsamer Rollback der Zuweisung und Audits sind weiterhin offen. Keine Service-Freigabe und keine Provisionierung von Testidentitäten.

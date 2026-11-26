@@ -1,0 +1,7 @@
+@EndUserText.label: 'NovaDesk Zuweisungsaktion'
+define abstract entity ZA_NVD_ASSIGN_COMMAND
+{
+  TicketID     : abap.numc(8);
+  ProposalUUID : sysuuid_x16;
+  TargetAgent  : abp_creation_user;
+}
