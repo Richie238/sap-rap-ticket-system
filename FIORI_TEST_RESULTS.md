@@ -243,3 +243,7 @@ Sechs ABAP-Unit-Tests für `ZCL_NVD_TICKET_WRITE_POLICY` bestanden. Sie prüfen 
 ### Freigabeblocker der IAM-Umstellung
 
 Die Zielbenutzerprüfung ist als Architekturentscheidung offen. Für den aktiven Service stehen die sieben unabhängigen Rollenidentitäten und positive sowie negative Laufzeittests zu Zuweisung, Workflow, Anhängen, Draft-Aktivierung, Löschkaskaden und direkten Zugriffen weiterhin aus. In diesem Schritt wurden keine Testbenutzer, Rollen oder Bestandszuordnungen angelegt.
+
+### Zweistufige Zuweisung
+
+Drei neue ABAP-Unit-Fälle für die aktive Vorschlags-DCL bestanden. Der Zielagent sah nur seinen offenen Vorschlag bei aktiver Teammitgliedschaft. Der Manager sah die Vorschläge seines berechtigten Teams. Ohne Berechtigung blieb die Sicht leer. Andere Ziele, nicht verifizierte Tickets, inaktive Mitgliedschaften und abgeschlossene Vorschläge für den Agenten wurden als Negativfälle geprüft. Die Vorschlagsaktionen, das Schreiben des Audits und der gemeinsame Speichervorgang mit der effektiven Zuweisung sind noch nicht implementiert und wurden nicht zur Laufzeit geprüft.

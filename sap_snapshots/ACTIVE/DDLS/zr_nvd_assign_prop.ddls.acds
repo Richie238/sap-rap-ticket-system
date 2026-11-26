@@ -1,0 +1,22 @@
+@EndUserText.label: 'NovaDesk Zuweisungsvorschläge'
+@AccessControl.authorizationCheck: #MANDATORY
+define root view entity ZR_NVD_ASSIGN_PROP
+  as select from znvd_assign_prop as Proposal
+    inner join zticket_item_03 as Ticket
+      on Ticket.ticket_id = Proposal.ticket_id
+      and Ticket.support_team_id = Proposal.support_team_id
+      and Ticket.migration_status = 'V'
+    inner join znvd_team as Team
+      on Team.support_team_id = Proposal.support_team_id and Team.is_active = 'X'
+    left outer join znvd_team_member as Member
+      on Member.support_team_id = Proposal.support_team_id
+      and Member.business_user = Proposal.target_agent and Member.is_active = 'X'
+{
+  key Proposal.proposal_uuid as ProposalUUID,
+  Proposal.support_team_id as SupportTeamID,
+  Proposal.target_agent as TargetAgent,
+  Proposal.proposal_status as ProposalStatus,
+  Proposal.proposed_at as ProposedAt,
+  Proposal.last_changed_at as LastChangedAt,
+  Member.business_user as ActiveTarget
+}

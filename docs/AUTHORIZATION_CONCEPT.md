@@ -138,6 +138,6 @@ Die Erweiterung referenziert `ZNVD_FLOW` für Workflow, `ZNVD_ATT` für Anhangs�
 
 ### Entscheidung zur Zielbenutzerprüfung
 
-Für die fehlende wirksame Agent-IAM-Prüfung ist die [Architekturentscheidung](ADR_AGENT_AUTHORIZATION.md) dokumentiert. Die Empfehlung ist ein Manager-Vorschlag mit anschließender Annahme durch den Zielagenten unter seiner eigenen IAM-Identität. Dieser Ablauf benötigt fachliche Freigabe. Der bestehende Integrationsentwurf verweigert Zuweisungen weiterhin.
+Für die fehlende wirksame Agent-IAM-Prüfung ist die [Architekturentscheidung](ADR_AGENT_AUTHORIZATION.md) dokumentiert. Die Empfehlung ist ein Manager-Vorschlag mit anschließender Annahme durch den Zielagenten unter seiner eigenen IAM-Identität. Der Ablauf ist fachlich freigegeben. Die aktive Vorschlagspersistenz und ihre unexponierte DCL-Lesesicht sind vorhanden. Mutierende Vorschlagsaktionen, Audit-Schreiben und wirksame Zuweisung stehen aus. Der bisherige direkte RAP-Entwurf verweigert Zuweisungen weiterhin.
 
 Die Pflege von `ZNVD_TEAM` in `ZNVD_FLOW`, `ZNVD_ATT` und `ZNVD_ADM` konnte in dieser Sitzung nicht abgeschlossen werden. Die Eclipse-Suche ließ sich für das Zielobjekt nicht stabil im Vordergrund öffnen. Die externe IAM-App hat im geprüften Services-Reiter keine Servicezuordnung angezeigt. Die Katalogzuordnung und getrennte Testidentitäten bleiben unbestätigt. Es wurde keine Service-Umstellung durchgeführt.

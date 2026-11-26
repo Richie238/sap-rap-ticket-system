@@ -1,0 +1,22 @@
+@EndUserText.label : 'NovaDesk Zuweisungsvorschläge'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table znvd_assign_prop {
+
+  key client        : abap.clnt not null;
+  key proposal_uuid : sysuuid_x16 not null;
+  ticket_id         : abap.numc(8) not null;
+  support_team_id   : znvd_team_id not null;
+  target_agent      : abp_creation_user not null;
+  prior_agent       : abp_creation_user;
+  predecessor_uuid  : sysuuid_x16;
+  proposal_status   : abap.char(1) not null;
+  proposed_by       : abp_creation_user not null;
+  proposed_at       : abp_creation_tstmpl not null;
+  decided_by        : abp_locinst_lastchange_user;
+  decided_at        : abp_locinst_lastchange_tstmpl;
+  last_changed_at   : abp_locinst_lastchange_tstmpl;
+
+}

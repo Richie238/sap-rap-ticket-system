@@ -1,0 +1,9 @@
+@EndUserText.label: 'Zugriff auf NovaDesk Zuweisungsvorschläge'
+@MappingRole: true
+define role ZR_NVD_ASSIGN_PROP {
+  grant select on ZR_NVD_ASSIGN_PROP
+    where ( ( SupportTeamID ) = aspect pfcg_auth( ZNVD_TKT, ZNVD_TEAM, ACTVT = '02' ) )
+      or ( ProposalStatus = 'P'
+        and TargetAgent = aspect user and ActiveTarget = aspect user
+        and ( SupportTeamID ) = aspect pfcg_auth( ZNVD_AGT, ZNVD_TEAM, ACTVT = '02' ) );
+}
