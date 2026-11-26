@@ -1,6 +1,8 @@
 @EndUserText.label: 'Ticket-Entwürfe'
 @AccessControl.authorizationCheck: #MANDATORY
 define root view entity ZR_NVD_TICKET_DQ as select from ZTCKT_ITM_0000_D
+  association [0..1] to ZI_NVD_TICKET_READ_SCOPE as _ActiveScope
+    on $projection.TicketID = _ActiveScope.TicketID
 {
   key ticketid as TicketID,
   subject as Subject,
@@ -25,5 +27,6 @@ define root view entity ZR_NVD_TICKET_DQ as select from ZTCKT_ITM_0000_D
   draftadministrativedatauuid,
   draftentityoperationcode,
   hasactiveentity,
-  draftfieldchanges
+  draftfieldchanges,
+  _ActiveScope
 }

@@ -4,6 +4,8 @@
 @EndUserText.label: '###GENERATED Core Data Service Entity'
 define root view entity ZR_TICKET_ITEM_03000
   as select from ZTICKET_ITEM_03
+  association [0..1] to ZI_NVD_TICKET_READ_SCOPE as _ReadScope
+    on $projection.TicketID = _ReadScope.TicketID
   composition [0..*] of ZR_NVD_TKT_ATT as _Attachments
   composition [0..*] of ZR_NVD_COMMENT as _Comments
   composition [0..*] of ZR_NVD_INTERNAL_NOTE as _InternalNotes
@@ -35,6 +37,7 @@ define root view entity ZR_TICKET_ITEM_03000
   local_last_changed_at as LocalLastChangedAt,
   @Semantics.systemDateTime.lastChangedAt: true
   last_changed_at as LastChangedAt,
+  _ReadScope,
   _Attachments,
   _Comments,
   _InternalNotes,

@@ -226,3 +226,10 @@ Der DCL-Filter für verifizierte Tickets wurde als Arbeitsversion syntaktisch ge
 ### Rollenabhängige Schreibregeln
 
 Sechs ABAP-Unit-Tests für `ZCL_NVD_TICKET_WRITE_POLICY` bestanden. Sie prüfen Requester-Felder und Anhangseigentum, Agent-Workflow und entzogene Teammitgliedschaft, Manager-Workflow und Zuweisung, getrennte Admin-Löschrechte, die Ablehnung unverifizierter Tickets sowie Schreibsperren bei Status G. Die Berechtigungsdaten sind simuliert. Die RAP-Global- und Instanzanbindung bestand die Syntaxprüfung einer Arbeitsversion. Positive und negative RAP-, Draft-Aktivierungs- und OData-Laufzeittests bleiben offen.
+
+### RAP-Integrationsentwurf und aktive CDS-Beziehungen
+
+- SAP hat die drei privaten CDS-Beziehungen gemeinsam geprüft und aktiviert. Die aktiven Quellen wurden zurückgelesen. Ticketprojektion und Service-Definition exponieren die Lesesicht nicht.
+- Nach Aktivierung der CDS-Beziehungen bestanden die bestehenden ABAP-Unit-Suiten des RAP-Behavior-Pools und der geschützten CDS-Lesesicht.
+- Der erweiterte RAP-/DCL-Arbeitsentwurf hat den SAP-Syntaxcheck bestanden. Er wurde nicht aktiviert. Die aktiven Quellen wurden nach dem Zurücksetzen der Arbeitsversion verifiziert.
+- Die aktive IAM-App `ZNVD_TICKET_EXT` wurde in Eclipse bestätigt. IAM-Katalogzuordnung, produktive Instanzautorisierung, Draft-Aktivierung und Rollen-Ende-zu-Ende-Tests stehen aus.

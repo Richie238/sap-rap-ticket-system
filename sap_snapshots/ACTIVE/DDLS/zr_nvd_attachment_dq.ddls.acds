@@ -1,6 +1,8 @@
 @EndUserText.label: 'Anhangsentwürfe'
 @AccessControl.authorizationCheck: #MANDATORY
 define root view entity ZR_NVD_ATTACHMENT_DQ as select from ZNVD_TKT_ATT_D
+  association [0..1] to ZR_NVD_TICKET_DQ as _TicketDraft
+    on $projection.TicketID = _TicketDraft.TicketID
 {
   key attachmentuuid as AttachmentUUID,
   ticketid as TicketID,
@@ -15,5 +17,6 @@ define root view entity ZR_NVD_ATTACHMENT_DQ as select from ZNVD_TKT_ATT_D
   draftadministrativedatauuid,
   draftentityoperationcode,
   hasactiveentity,
-  draftfieldchanges
+  draftfieldchanges,
+  _TicketDraft
 }
